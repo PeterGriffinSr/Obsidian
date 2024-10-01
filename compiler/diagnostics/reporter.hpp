@@ -5,16 +5,14 @@
 
 namespace diagnostics {
     enum class ExitValue {
-        OK = 0,
-        INVALID_FILE_EXTENSION = 1,
-        INVALID_FILE = 2,
-        LEXER_ERROR = 3,
-        PARSER_ERROR = 4,
-        _ERROR = 5,
-        MEMORY_ALLOCATION_FAILURE = 6,
-        INVALID_ARGUMENT = 7,
-        VM_ERROR = 8,
-        VM_RETURN = 9,
+        OK,
+        INVALID_FILE_EXTENSION ,
+        INVALID_FILE,
+        LEXER_ERROR,
+        PARSER_ERROR,
+        _ERROR,
+        MEMORY_ALLOCATION_FAILURE,
+        INVALID_ARGUMENT,
     };
 
     class Error {
