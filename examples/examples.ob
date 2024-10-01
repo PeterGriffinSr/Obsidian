@@ -1,0 +1,87 @@
+// Implicit typing
+let a := 5
+
+// Explicit typing
+let b: int = 10
+
+// Implicit return type (inferred)
+fun add(x, y) { 
+    return x + y
+}
+
+// Explicit return type
+fun double(x: int) { 
+    return x * 2
+}
+
+// Switch case
+switch (x) {
+    case 1:
+        print("Hello")
+    case 2:
+        print("Goodbye")
+    default:
+        print("Case not supported")
+}
+
+// If-else
+if (x > 10) { 
+    print("High") 
+} else { 
+    print("Low")
+}
+
+// While loop
+while (x < 10) { 
+    x += 1  
+}
+
+// For loop
+for i in 0..10 { 
+    print(i)
+}
+
+// Generic class (template)
+class Box<T>(value: T) {    
+  fun get() T {
+    return value
+  }
+}
+
+// Instantiating a generic class
+let intBox = Box<int>(5)
+let strBox = Box<string>("Hello")
+
+//Class with fields
+class Square(value: int) {
+    fun get() int {
+        return value
+    }
+}
+
+// Instantiating the class
+let sq = Square(5)
+
+// Struct with fields and default constructor
+struct Point(x: int, y: int) {
+    move(dx: int, dy: int) { 
+        x += dx
+        y += dy 
+    }
+}
+
+// Instantiating classes
+let intBox = Box(5)
+let strBox = Box("Hello")
+let p = Point(0, 0)
+
+// Array (with inferred type)
+let nums = {1, 2, 3, 4, 5}
+
+// Explicit array
+let strings: []string = {"a", "b", "c"}
+
+// Function with a constraint that T must be a number type
+fun sum<T: int>(x: T, y: T) T { 
+    return x + y
+}

@@ -1,0 +1,10 @@
+let x: int = 10
+let y := 5
+
+fun add(x, y) { 
+    return x + y
+}
+
+fun double(x: int) { 
+    return x * 2
+}
