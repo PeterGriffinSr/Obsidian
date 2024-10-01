@@ -2,6 +2,8 @@
 #include "compiler/diagnostics/reporter.hpp"
 #include "compiler/lexer/lexer.hpp"
 #include "compiler/parser/ast.hpp"
+#include <memory>
+#include <string>
 
 Parser::Parser::Parser(std::vector<Lexer::Token>& tokens, Lexer::Lexer& lexer)
     : tokens(tokens), current(0), lexer(lexer) {}
@@ -34,6 +36,8 @@ int Parser::Parser::get_precedence(const Lexer::Token& token) const {
         case Lexer::TokenType::Star:
         case Lexer::TokenType::Slash:
             return 2;
+        case Lexer::TokenType::Power:
+            return 3;
         default:
             return 0;
     }
@@ -45,8 +49,14 @@ std::shared_ptr<Ast::Expression> Parser::Parser::parse_expression(int precedence
 
     switch (token.type) {
         case Lexer::TokenType::Int: {
+            int value = std::stod(token.value);
+            left = std::make_shared<Ast::Expression>(Ast::NumberLiteral{(value)});
+            next_token();
+            break;
+        }
+        case Lexer::TokenType::Float: {
             double value = std::stod(token.value);
-            left = std::make_shared<Ast::Expression>(Ast::NumberLiteral{value});
+            left = std::make_shared<Ast::Expression>(Ast::FloatLiteral{(value)});
             next_token();
             break;
         }

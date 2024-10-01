@@ -14,7 +14,7 @@ namespace Lexer {
         Leq,  Ampersand, Carot, LogicalAnd, LogicalOr, Inc, Dec, Nullish, Idenifier, 
         String, Int, Char, Bool, Float, Nil, Fun, Let, Const, Return, If, Else, Switch, 
         Case, While, For, Import, Export, Default, Eof, Err, In, DotDot, ImplAssign, IntType,
-        StringType, BoolType, CharType, FloatType, Class
+        StringType, BoolType, CharType, FloatType, Class, Power
     };
 
     struct Token {

@@ -1,5 +1,6 @@
 #include "ast.hpp"
 #include <iostream>
+#include <variant>
 
 namespace Ast {
     void printAst(const std::shared_ptr<Expression>& expr, int indent) {
@@ -8,7 +9,11 @@ namespace Ast {
         if (std::holds_alternative<NumberLiteral>(*expr)) {
             const NumberLiteral& num = std::get<NumberLiteral>(*expr);
             std::cout << indentation << "NumberLiteral: " << num.value << std::endl;
-
+        
+        } else if (std::holds_alternative<FloatLiteral>(*expr)) {
+            const FloatLiteral& num = std::get<FloatLiteral>(*expr);
+            std::cout << indentation << "FloatLiteral: " << num.value << std::endl;
+        
         } else if (std::holds_alternative<Variable>(*expr)) {
             const Variable& var = std::get<Variable>(*expr);
             std::cout << indentation << "Variable: " << var.name << std::endl;

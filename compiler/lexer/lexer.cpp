@@ -16,14 +16,14 @@ const std::unordered_map<char, Lexer::TokenType> Lexer::Lexer::singleCharTokens 
     {'}', TokenType::RBrace}, {'[', TokenType::LBracket}, {']', TokenType::RBracket},
     {',', TokenType::Comma}, {'+', TokenType::Plus}, {'-', TokenType::Minus},
     {'*', TokenType::Star}, {'/', TokenType::Slash}, {';', TokenType::Semi},
-    {':', TokenType::Colon}, {'.', TokenType::Dot}, {'!', TokenType::Not},
-    {'=', TokenType::Assign}, {'>', TokenType::Greater}, {'<', TokenType::Less}
+    {':', TokenType::Colon}, {'.', TokenType::Dot}, {'!', TokenType::Not}, {'%', TokenType::Percent},
+    {'=', TokenType::Assign}, {'>', TokenType::Greater}, {'<', TokenType::Less}, {'^', TokenType::Carot}
 };
 
 const std::unordered_map<std::string, Lexer::TokenType> Lexer::Lexer::multiCharTokens = {
     {"!=", TokenType::Neq}, {"==", TokenType::Eq}, {">=", TokenType::Geq}, {"<=", TokenType::Leq}, {"++", TokenType::Inc}, 
     {"--", TokenType::Dec}, {"&&", TokenType::LogicalAnd}, {"||", TokenType::LogicalOr}, {":=", TokenType::ImplAssign}, 
-    {"..", TokenType::DotDot}
+    {"..", TokenType::DotDot}, {"**", TokenType::Power}
 };
 
 Lexer::Lexer::Lexer(const std::string& input) : input(input), position(0), currentLine(1), currentColumn(1) {}

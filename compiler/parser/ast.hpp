@@ -8,8 +8,8 @@
 #include <vector>
 
 namespace Ast {
-    // Forward declarations
     struct BinaryExpression;
+    struct FloatLiteral;
     struct NumberLiteral;
     struct Variable;
     struct VariableDeclaration;
@@ -18,9 +18,13 @@ namespace Ast {
     struct ReturnStatement;
     struct BlockStmt;
 
-    using Expression = std::variant<BinaryExpression, NumberLiteral, Variable, VariableDeclaration, Parameter, FunctionDeclaration, ReturnStatement, BlockStmt>;
+    using Expression = std::variant<BinaryExpression, FloatLiteral, NumberLiteral, Variable, VariableDeclaration, Parameter, FunctionDeclaration, ReturnStatement, BlockStmt>;
 
     struct NumberLiteral {
+        int value;
+    };
+
+    struct FloatLiteral {
         double value;
     };
 
