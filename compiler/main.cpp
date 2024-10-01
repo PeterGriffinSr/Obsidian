@@ -10,7 +10,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    
     std::string source = Utils::Flags::read(argv[1]);
     Lexer::Lexer lexer(source);
     auto tokens = lexer.scanToken();
