@@ -3,7 +3,7 @@ A memory safe compiled programming language built in C++.
 
 - [Features](#features)
 - [Installation](#installation)
-    - [Build]
+    - [Build](#)
 - [Usage](#usage)
 - [Examples](#examples)
     - [Hello, World](#hello-world)
