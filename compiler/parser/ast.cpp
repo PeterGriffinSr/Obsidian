@@ -14,6 +14,18 @@ namespace Ast {
             const FloatLiteral& num = std::get<FloatLiteral>(*expr);
             std::cout << indentation << "FloatLiteral: " << num.value << std::endl;
         
+        } else if (std::holds_alternative<StringLiteral>(*expr)) {
+            const StringLiteral& str = std::get<StringLiteral>(*expr);
+            std::cout << indentation << "StringLiteral: \"" << str.value << "\"" << std::endl;
+
+        } else if (std::holds_alternative<CharLiteral>(*expr)) {
+            const CharLiteral& chr = std::get<CharLiteral>(*expr);
+            std::cout << indentation << "CharLiteral: \'" << chr.value << "'" << std::endl; 
+        
+        } else if (std::holds_alternative<BoolLiteral>(*expr)) {
+            const BoolLiteral& b = std::get<BoolLiteral>(*expr);
+            std::cout << indentation << "BoolLiteral: " << (b.value ? "true" : "false") << std::endl;
+        
         } else if (std::holds_alternative<Variable>(*expr)) {
             const Variable& var = std::get<Variable>(*expr);
             std::cout << indentation << "Variable: " << var.name << std::endl;
@@ -79,6 +91,25 @@ namespace Ast {
 
             for (const auto& statement : block.statements) {
                 printAst(statement, indent + 4);
+            }
+
+        } else if (std::holds_alternative<SwitchStmt>(*expr)) {
+            const SwitchStmt& switch_stmt = std::get<SwitchStmt>(*expr);
+            std::cout << indentation << "SwitchStatement:" << std::endl;
+            std::cout << indentation << "  Condition:" << std::endl;
+            printAst(switch_stmt.condition, indent + 4);
+
+            std::cout << indentation << "  Cases:" << std::endl;
+            for (const auto& case_stmt : switch_stmt.cases) {
+                std::cout << indentation << "    Case:" << std::endl;
+                printAst(case_stmt.condition, indent + 6);
+                std::cout << indentation << "    Body:" << std::endl;
+                printAst(std::make_shared<Expression>(*case_stmt.body), indent + 6);
+            }
+
+            if (switch_stmt.default_case) {
+                std::cout << indentation << "  Default Case:" << std::endl;
+                printAst(std::make_shared<Expression>(*switch_stmt.default_case), indent + 6);
             }
         }
     }

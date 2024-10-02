@@ -1,4 +1,6 @@
 #include "lexer.hpp"
+#include <cstring>
+#include <optional>
 #include <sstream>
 #include <unordered_map>    
 #include "compiler/diagnostics/reporter.hpp"
@@ -8,7 +10,7 @@ const std::unordered_map<std::string, Lexer::TokenType> Lexer::Lexer::keywords =
     {"float", TokenType::FloatType}, {"string", TokenType::StringType}, {"char", TokenType::CharType}, {"const", TokenType::Const}, 
     {"nil", TokenType::Nil}, {"bool", TokenType::BoolType}, {"if", TokenType::If}, {"else", TokenType::Else}, 
     {"while", TokenType::While}, {"for", TokenType::For}, {"import", TokenType::Import}, {"export", TokenType::Export}, 
-    {"in", TokenType::In}, {"default", TokenType::Default}, {"class", TokenType::Class}
+    {"in", TokenType::In}, {"default", TokenType::Default}, {"class", TokenType::Class}, {"true", TokenType::Bool}, {"false", TokenType::Bool}
 };
 
 const std::unordered_map<char, Lexer::TokenType> Lexer::Lexer::singleCharTokens = {
@@ -92,6 +94,11 @@ std::vector<Lexer::Token> Lexer::Lexer::scanToken() {
         if (current_char == '"') {
             auto string_token = scanString();
             if (string_token) tokens.push_back(*string_token);
+            continue;
+        }
+        if (current_char == '\'') {
+            auto char_token = scanChar();
+            if (char_token) tokens.push_back(*char_token);
             continue;
         }
         if (std::isalpha(current_char)) {
@@ -188,6 +195,33 @@ std::optional<Lexer::Token> Lexer::Lexer::scanNumber() {
     }
 
     return Token{TokenType::Int, result, start_line, start_column};
+}
+
+std::optional<Lexer::Token> Lexer::Lexer::scanChar() {
+    std::string result;
+    int start_line = currentLine;
+    int start_column = currentColumn;
+
+    nextChar();
+
+    while (true) {
+        char current_char = peek();
+        if (current_char == '\0' || current_char == '\n') {
+            reportError("Unterminated character.");
+            return Token{TokenType::Err, "Unterminated character.", start_line, start_column};
+        }
+
+        if (current_char == '\'') {
+            nextChar();
+            if (result.size() != 1) {
+                reportError("Character literal too long.");
+                return Token{TokenType::Err, "Character literal too long.", start_line, start_column};
+            }
+            return Token{TokenType::Char, result, start_line, start_column};
+        }
+
+        result += nextChar();
+    }
 }
 
 std::optional<Lexer::Token> Lexer::Lexer::scanString() {

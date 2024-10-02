@@ -45,6 +45,7 @@ namespace Lexer {
         std::optional<Token> scanIdentifier();
         std::optional<Token> scanString();
         std::optional<Token> scanNumber();
+        std::optional<Token> scanChar();
         void skipWhitespace();
         void skipSingleLineComment();
         void skipMultiLineComment();

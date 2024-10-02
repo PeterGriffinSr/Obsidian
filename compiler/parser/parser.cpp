@@ -59,6 +59,25 @@ std::shared_ptr<Ast::Expression> Parser::Parser::parse_expression(int precedence
             left = std::make_shared<Ast::Expression>(Ast::FloatLiteral{(value)});
             next_token();
             break;
+        
+        }
+        case Lexer::TokenType::String: {
+            std::string value = token.value;
+            left = std::make_shared<Ast::Expression>(Ast::StringLiteral{(value)});
+            next_token();
+            break;
+        }
+        case Lexer::TokenType::Char: {
+            char value = token.value[0];
+            left = std::make_shared<Ast::Expression>(Ast::CharLiteral{(value)});
+            next_token();
+            break;
+        }
+        case Lexer::TokenType::Bool: {
+            bool value = (token.value == "true");
+            left = std::make_shared<Ast::Expression>(Ast::BoolLiteral{value});
+            next_token();
+            break;
         }
         case Lexer::TokenType::Idenifier: {
             left = std::make_shared<Ast::Expression>(Ast::Variable{token.value});
@@ -247,11 +266,99 @@ std::shared_ptr<Ast::Expression> Parser::Parser::parse_function() {
     return std::make_shared<Ast::Expression>(Ast::FunctionDeclaration{func_name, parameters, returnType, body});
 }
 
+std::shared_ptr<Ast::Expression> Parser::Parser::parse_switch_statement() {
+    if (!match(Lexer::TokenType::Switch)) {
+        diagnostics::Error::parserError(current_token(), "Expected 'switch' keyword", lexer);
+        return nullptr;
+    }
+
+    if (!match(Lexer::TokenType::LParen)) {
+        diagnostics::Error::parserError(current_token(), "Expected '(' after 'switch'", lexer);
+        return nullptr;
+    }
+
+    auto switch_expr = parse_expression();
+    if (!switch_expr) {
+        diagnostics::Error::parserError(current_token(), "Expected expression after 'switch ('", lexer);
+        return nullptr;
+    }
+
+    if (!match(Lexer::TokenType::RParen)) {
+        diagnostics::Error::parserError(current_token(), "Expected ')' after switch expression", lexer);
+        return nullptr;
+    }
+
+    if (!match(Lexer::TokenType::LBrace)) {
+        diagnostics::Error::parserError(current_token(), "Expected '{' after switch expression", lexer);
+        return nullptr;
+    }
+
+    std::vector<Ast::SwitchCase> cases;
+    std::shared_ptr<Ast::BlockStmt> default_case = nullptr;
+
+    while (current_token().type != Lexer::TokenType::RBrace && current_token().type != Lexer::TokenType::Eof) {
+        if (match(Lexer::TokenType::Case)) {
+            auto case_condition = parse_expression();
+            if (!case_condition) {
+                diagnostics::Error::parserError(current_token(), "Expected expression after 'case'", lexer);
+                return nullptr;
+            }
+
+            if (!match(Lexer::TokenType::Colon)) {
+                diagnostics::Error::parserError(current_token(), "Expected ':' after case expression", lexer);
+                return nullptr;
+            }
+
+            std::shared_ptr<Ast::BlockStmt> case_body;
+            if (current_token().type == Lexer::TokenType::LBrace) {
+                case_body = parse_block();
+            } else {
+                auto single_stmt = parse_statement();
+                if (!single_stmt) {
+                    diagnostics::Error::parserError(current_token(), "Expected statement after case ':'", lexer);
+                    return nullptr;
+                }
+                case_body = std::make_shared<Ast::BlockStmt>(std::vector<std::shared_ptr<Ast::Expression>>{single_stmt});
+            }
+
+            cases.push_back(Ast::SwitchCase{case_condition, case_body});
+        } else if (match(Lexer::TokenType::Default)) {
+            if (!match(Lexer::TokenType::Colon)) {
+                diagnostics::Error::parserError(current_token(), "Expected ':' after 'default'", lexer);
+                return nullptr;
+            }
+
+            if (current_token().type == Lexer::TokenType::LBrace) {
+                default_case = parse_block();
+            } else {
+                auto single_stmt = parse_statement();
+                if (!single_stmt) {
+                    diagnostics::Error::parserError(current_token(), "Expected statement after default ':'", lexer);
+                    return nullptr;
+                }
+                default_case = std::make_shared<Ast::BlockStmt>(std::vector<std::shared_ptr<Ast::Expression>>{single_stmt});
+            }
+        } else {
+            diagnostics::Error::parserError(current_token(), "Unexpected token in switch statement", lexer);
+            return nullptr;
+        }
+    }
+
+    if (!match(Lexer::TokenType::RBrace)) {
+        diagnostics::Error::parserError(current_token(), "Expected '}' to end switch statement", lexer);
+        return nullptr;
+    }
+
+    return std::make_shared<Ast::Expression>(Ast::SwitchStmt{switch_expr, cases, default_case});
+}
+
 std::shared_ptr<Ast::Expression> Parser::Parser::parse() {
     if (current_token().type == Lexer::TokenType::Let) {
         return parse_declaration();
     } else if (current_token().type == Lexer::TokenType::Fun) {
         return parse_function();
+    } else if (current_token().type == Lexer::TokenType::Switch) {
+        return parse_switch_statement();
     } else {
         return parse_expression();
     }

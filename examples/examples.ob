@@ -17,11 +17,11 @@ fun double(x: int) {
 // Switch case
 switch (x) {
     case 1:
-        print("Hello")
+        { return "Hello" }
     case 2:
-        print("Goodbye")
+        { return true }
     default:
-        print("Case not supported")
+        { return 'e' }
 }
 
 // If-else
@@ -71,8 +71,6 @@ struct Point(x: int, y: int) {
 }
 
 // Instantiating classes
-let intBox = Box(5)
-let strBox = Box("Hello")
 let p = Point(0, 0)
 
 // Array (with inferred type)

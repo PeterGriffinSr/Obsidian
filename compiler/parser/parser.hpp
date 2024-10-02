@@ -15,6 +15,7 @@ namespace Parser {
         std::shared_ptr<Ast::Expression> parse();
         std::shared_ptr<Ast::Expression> parse_function();
         std::shared_ptr<Ast::Expression> parse_statement();
+        std::shared_ptr<Ast::Expression> parse_switch_statement();
         std::shared_ptr<Ast::BlockStmt> parse_block();
         bool HasTokens() const;
 
