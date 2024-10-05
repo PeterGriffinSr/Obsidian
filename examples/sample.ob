@@ -1,0 +1,91 @@
+import "lib";
+
+int a = 5;
+float b = 3.14;
+string c = "Alice"; 
+bool isActive = true;
+char randChar = 'c';
+
+const int d = 10;
+const float e = 15.6;
+const string f = "Peter";
+const bool g = false;
+const char h = 'd';
+
+fn add(int x, int y) int {
+    return x + y;
+}
+
+fn greet(string name) string {
+    return "Hello, " ^ name;
+}
+
+fn test() void {
+    println("Hello");
+}
+
+if (a == b) {
+    println("a is equal to b");
+} else {
+    println("a is not equal to b");
+}
+
+int x = 2;
+switch (x) {
+    case 1:
+        println("case 1");
+    case 2:
+        println("case 2");
+    default:
+        println("something");
+}
+
+int i = 0;
+while (i < 1) {
+    println("Hello, world");
+}
+
+for (int j = 0; j < 5; j++) {
+    println("j = " ^ j);
+}
+
+// class MyClass {
+// public:
+//     fn setName(string name) void {
+//         this.name = name;
+//     }
+// 
+//     fn printlnClass() void {
+//         println(name);
+//     } 
+// 
+// private:
+//     string name;
+// }
+
+// MyClass myObj = new MyClass();
+// myObj.setName("John");
+// myObj.printlnClass();
+
+enum Color {
+    RED,
+    GREEN,
+    BLUE
+}
+
+unsafe {
+    int n;
+    int *ptr = cast(alloc(n * sizeof(int)), *int);
+    dealloc(ptr);
+}
+
+int yy = 5;
+float fyy = cast(yy, float); // 5 -> 5.0
+string syy = cast(yy, string); // 5 -> "5"
+typeof(yy); // yy -> int
+
+export lib;
+
+fn main() int {
+    return 0;
+}

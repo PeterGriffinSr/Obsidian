@@ -1,5 +1,5 @@
 # Obsidian
-A memory safe compiled programming language built in C++.
+A memory safe compiled programming language built in OCaml.
 
 - [Features](#features)
 - [Installation](#installation)
@@ -7,14 +7,13 @@ A memory safe compiled programming language built in C++.
 - [Usage](#usage)
 - [Examples](#examples)
     - [Hello, World](#hello-world)
-    - [Error Handling](#error-handling)
 - [Contribute](#contributing)
 - [License](#license)
 
 # Features
 - compiled: Obsidian provides a compiled abstraction, allowing developers to write code that is closer to human-readable language.
     
-- Dynamic Typing/Static Typing: Variables in Obsidian are dynamically/statically typed, meaning their types are determined at runtime or pre-defined.
+- Static Typing: Variables in Obsidian are statically typed, meaning their types are pre-defined.
     
 - File Extension: Obsidian source files have the extension `.ob`.
 
@@ -22,30 +21,22 @@ A memory safe compiled programming language built in C++.
 To start using Obsidian, follow the installation guide below:
 
 ```
-meson setup build && meson compile -C build
+dune build
 ```
 
 # Usage
 ```
-./build/obsidian <filename>
+./_build/default/bin/obsidian <filename>
 ```
 
 # Examples
 
 ## Hello, world
 ```
-fun main() {
+fn main() {
     print("Hello, world!");
-    exit(0);
+    return 0;
 }
-```
-
-## Error Handling
-```
-Error: [line: 2, column: 30] Unexpected character: ~
-    2 |     print("Hello, world!\n");~
-      |                              ^
-
 ```
 
 # Contributing

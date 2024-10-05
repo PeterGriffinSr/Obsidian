@@ -1,0 +1,5 @@
+(executable
+ (name obsidian)
+ (public_name obsidian)
+ (modules obsidian)
+ (libraries obsidianlib))
