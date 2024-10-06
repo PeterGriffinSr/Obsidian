@@ -7,37 +7,32 @@ fn add(int x, int y) int {
     return x + y;
 }
 
-fn voidFunc() void {
-    println("Hello");
-}
-
 fn main() int {
-    // int x = 1;
-    // bool y = false;
-    // string z = "Hello0";
+    bool y = false;
+    string z = "Hello";
 
-    // switch (y) {
-    //     case true:
-    //         println("x is 5");
-    //     case false:
-    //         println("x is 6");
-    //     default:
-    //         println("case not found!");
-    // }
+    switch (y) {
+        case true:
+            println("x is 5");
+        case false:
+            println("x is 6");
+        default:
+            println("case not found!");
+    }
 
-    // if (z == "Hello") {
-    //     println("z is hello");
-    // }
+    if (z == "Hello") {
+        println("z is hello");
+    }
 
-    // int i = 0;
-    // while (i < 1) {
-    //     println("Hello, world");
-    //     i++;
-    // }
+    int i = 0;
+    while (i < 1) {
+        println("Hello, world");
+        i++;
+    }
 
-    // for (int j = 4; j <= 5; j++) {
-    //     println("Hello, world!");
-    // }
+    for (int j = 0; j <= 5; j++) {
+        println("Hello, world!");
+    }
 
     int yy = 5;
     float fyy = cast(yy, float); // 5 -> 5.5
@@ -46,5 +41,8 @@ fn main() int {
     println(typeof(yy));
     println(sizeof(float));
 
+    println(add(5, 5));
+    greet("Azlo");
+    
     return 0;
 }
