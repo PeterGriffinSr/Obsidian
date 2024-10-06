@@ -29,7 +29,8 @@ let () =
       let initial_env = Typechecker.TypeChecker.empty_env in
 
       let _ =
-        Typechecker.TypeChecker.check_block initial_env [ ast ] ~expected_return_type:None
+        Typechecker.TypeChecker.check_block initial_env [ ast ]
+          ~expected_return_type:None
       in
 
       Codegen.generate_code ast;

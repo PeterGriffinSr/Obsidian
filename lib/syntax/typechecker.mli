@@ -7,22 +7,14 @@ module TypeChecker : sig
     val is_empty : 'a t -> bool
     val mem : key -> 'a t -> bool
     val add : key -> 'a -> 'a t -> 'a t
-
-    val update :
-      key -> ('a option -> 'a option) -> 'a t -> 'a t
-
+    val update : key -> ('a option -> 'a option) -> 'a t -> 'a t
     val singleton : key -> 'a -> 'a t
     val remove : key -> 'a t -> 'a t
 
     val merge :
-      (key -> 'a option -> 'b option -> 'c option) ->
-      'a t ->
-      'b t ->
-      'c t
+      (key -> 'a option -> 'b option -> 'c option) -> 'a t -> 'b t -> 'c t
 
-    val union :
-      (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
-
+    val union : (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
     val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
     val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
     val iter : (key -> 'a -> unit) -> 'a t -> unit
@@ -44,15 +36,9 @@ module TypeChecker : sig
     val find : key -> 'a t -> 'a
     val find_opt : key -> 'a t -> 'a option
     val find_first : (key -> bool) -> 'a t -> key * 'a
-
-    val find_first_opt :
-      (key -> bool) -> 'a t -> (key * 'a) option
-
+    val find_first_opt : (key -> bool) -> 'a t -> (key * 'a) option
     val find_last : (key -> bool) -> 'a t -> key * 'a
-
-    val find_last_opt :
-      (key -> bool) -> 'a t -> (key * 'a) option
-
+    val find_last_opt : (key -> bool) -> 'a t -> (key * 'a) option
     val map : ('a -> 'b) -> 'a t -> 'b t
     val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
     val to_seq : 'a t -> (key * 'a) Seq.t
@@ -62,18 +48,28 @@ module TypeChecker : sig
     val of_seq : (key * 'a) Seq.t -> 'a t
   end
 
-  type env = { var_type : Ast.Type.t Env.t }
+  type func_sig = { param_type : Ast.Type.t list; return_type : Ast.Type.t }
+  type env = { var_type : Ast.Type.t Env.t; func_type : func_sig Env.t }
 
   val empty_env : env
+  val lookup_function : env -> Env.key -> func_sig
   val lookup_variables : env -> Env.key -> Ast.Type.t
   val check_expr : env -> Ast.Expr.t -> Ast.Type.t
 
   val check_variable_decl :
     env -> Env.key -> Ast.Type.t -> Ast.Expr.t option -> env
 
+  val check_func_decl :
+    env ->
+    Env.key ->
+    Ast.Stmt.parameter list ->
+    Ast.Type.t ->
+    Ast.Stmt.t list ->
+    env
+
   val check_stmt :
-    env -> expected_return_type:'a -> Ast.Stmt.t -> env
+    env -> expected_return_type:Ast.Type.t option -> Ast.Stmt.t -> env
 
   val check_block :
-    env -> Ast.Stmt.t list -> expected_return_type:'a -> env
+    env -> Ast.Stmt.t list -> expected_return_type:Ast.Type.t option -> env
 end
