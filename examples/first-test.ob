@@ -1,8 +1,4 @@
-fn add() int {
-    return 3;
-}
-
-fn e() int {
-    int x = 10;
+fn main() int {
+    int x = 10 + 2 * 4;
     return x;
 }

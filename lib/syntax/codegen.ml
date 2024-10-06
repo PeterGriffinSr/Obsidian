@@ -2,7 +2,7 @@ open Llvm
 open Ast
 
 let context = global_context ()
-let the_module = create_module context "obsidain"
+let the_module = create_module context "obsidian"
 let builder = builder context
 let i64_type = i64_type context
 let f64_type = double_type context

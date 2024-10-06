@@ -31,6 +31,18 @@ let remove_entry1_lines filename =
     close_out out_channel;
     Sys.rename "filtered_output.ll" filename
 
+(* let run_clang_commands () =
+  let clang_s_command = "clang -S output.ll" in
+  if Sys.command clang_s_command <> 0 then
+    Printf.eprintf "Failed to run clang -S on output.ll\n";
+  Sys.remove "output.ll";
+
+  let clang_o_command = "clang -o output output.s -O3" in
+  if Sys.command clang_o_command <> 0 then
+    Printf.eprintf "Failed to run clang -o output on output.s\n";
+
+  Sys.remove "output.s" *)
+
 let () =
   if Array.length Sys.argv = 2 then (
     let filename = Sys.argv.(1) in
@@ -38,7 +50,7 @@ let () =
     let lexbuf = Lexing.from_channel file_channel in
     try
       let ast = Parser.program Lexer.token lexbuf in
-      Printf.printf "Parsed AST:\n%s\n" (Ast.Stmt.show ast);
+      (* Printf.printf "Parsed AST:\n%s\n" (Ast.Stmt.show ast); *)
 
       let initial_env = Typechecker.TypeChecker.empty_env in
 
@@ -52,7 +64,8 @@ let () =
       close_in file_channel;
 
       remove_entry1_lines "output.ll";
-      Sys.command "open output.ll" |> ignore
+      
+      (* run_clang_commands (); *)
     with
     | Parser.Error ->
         print_error_position filename lexbuf;
