@@ -2,7 +2,7 @@ open Llvm
 open Ast
 
 let context = global_context ()
-let the_module = create_module context "my_module"
+let the_module = create_module context "obsidain"
 let builder = builder context
 let i64_type = i64_type context
 let f64_type = double_type context
@@ -76,7 +76,7 @@ let rec codegen_stmt = function
         | Some (Ast.Type.SymbolType { value = "char" }) -> char_type
         | Some (Ast.Type.SymbolType { value = "string" }) -> string_type
         | Some (Ast.Type.SymbolType { value = "bool" }) -> i1_type
-        | Some (Ast.Type.SymbolType { value = "void" } ) -> void_type
+        | Some (Ast.Type.SymbolType { value = "void" }) -> void_type
         | _ -> failwith "Unsupported function return type"
       in
       let param_types =

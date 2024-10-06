@@ -17,6 +17,20 @@ let print_error_position filename _lexbuf =
   Printf.printf "Parser Error at Line %d, Column %d\n-> %s\n" line_num col_num
     line_content
 
+let remove_entry1_lines filename =
+  let in_channel = open_in filename in
+  let out_channel = open_out "filtered_output.ll" in
+  try
+    while true do
+      let line = input_line in_channel in
+      if not (Str.string_match (Str.regexp ".*entry1:") line 0) then
+        output_string out_channel (line ^ "\n")
+    done
+  with End_of_file ->
+    close_in in_channel;
+    close_out out_channel;
+    Sys.rename "filtered_output.ll" filename
+
 let () =
   if Array.length Sys.argv = 2 then (
     let filename = Sys.argv.(1) in
@@ -35,7 +49,10 @@ let () =
 
       Codegen.generate_code ast;
 
-      close_in file_channel
+      close_in file_channel;
+
+      remove_entry1_lines "output.ll";
+      Sys.command "open output.ll" |> ignore
     with
     | Parser.Error ->
         print_error_position filename lexbuf;

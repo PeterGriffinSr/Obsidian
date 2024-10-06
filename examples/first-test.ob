@@ -1,9 +1,8 @@
-// int x = 5;
-// float y = 5.1;
-// char z = '5';
-// string a = "String";
-// bool b = true;
+fn add() int {
+    return 3;
+}
 
-fn main() int {
-    return 5;
+fn e() int {
+    int x = 10;
+    return x;
 }
