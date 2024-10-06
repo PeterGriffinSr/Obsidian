@@ -6,7 +6,15 @@ module TypeChecker = struct
   type func_sig = { param_type : Type.t list; return_type : Type.t }
   type env = { var_type : Type.t Env.t; func_type : func_sig Env.t }
 
-  let empty_env = { var_type = Env.empty; func_type = Env.empty }
+  (* Updated println to accept any type *)
+  let empty_env =
+    let println_sig =
+      { param_type = []; return_type = Type.SymbolType { value = "void" } }
+    in
+    {
+      var_type = Env.empty;
+      func_type = Env.add "println" println_sig Env.empty;
+    }
 
   let lookup_function env name =
     try Env.find name env.func_type
@@ -31,6 +39,29 @@ module TypeChecker = struct
             else failwith "Type mismatch in arithmetic expression"
         | _ -> failwith "Unsupported operator in binary expression")
     | Expr.VarExpr name -> lookup_variables env name
+    | Expr.CallExpr { callee; arguments } ->
+        let func_name =
+          match callee with
+          | Expr.VarExpr name -> name
+          | _ -> failwith "TypeChecker: Unsupported function call"
+        in
+        let { param_type; return_type } = lookup_function env func_name in
+        if List.length arguments <> List.length param_type then
+          failwith
+            ("TypeChecker: Incorrect number of arguments for function "
+           ^ func_name);
+        List.iter2
+          (fun arg _param_type ->
+            let _arg_type = check_expr env arg in
+            (* No need for detailed argument type checking for println *)
+            ())
+          arguments param_type;
+        return_type
+    (* Updated println: Accepts any type without casting *)
+    | Expr.PrintlnExpr { expr } ->
+        (* Check the expression without enforcing a specific type *)
+        let _ = check_expr env expr in
+        Type.SymbolType { value = "void" }
     | _ -> failwith "Unsupported expression"
 
   let check_variable_decl env identifier explicit_type assigned_value =

@@ -38,25 +38,25 @@ let remove_entry1_lines filename =
     close_out out_channel;
     Sys.rename "filtered_output.ll" filename
 
-let run_clang_commands ~output ~save_asm ~optimization_level =
-  if save_asm then (
-    let clang_s_command =
-      Printf.sprintf "clang -S output.ll -O%s -Wno-override-module"
-        optimization_level
-    in
-    if Sys.command clang_s_command <> 0 then
-      Printf.eprintf "Failed to run clang -S on output.ll\n";
-    Sys.remove "output.ll";
-    exit 0);
+(* let run_clang_commands ~output ~save_asm ~optimization_level =
+   if save_asm then (
+     let clang_s_command =
+       Printf.sprintf "clang -S output.ll -O%s -Wno-override-module"
+         optimization_level
+     in
+     if Sys.command clang_s_command <> 0 then
+       Printf.eprintf "Failed to run clang -S on output.ll\n";
+     Sys.remove "output.ll";
+     exit 0);
 
-  let clang_o_command =
-    Printf.sprintf "clang -o %s output.ll -O%s -Wno-override-module" output
-      optimization_level
-  in
-  if Sys.command clang_o_command <> 0 then
-    Printf.eprintf "Failed to run clang -o on output.ll\n";
+   let clang_o_command =
+     Printf.sprintf "clang -o %s output.ll -O%s -Wno-override-module" output
+       optimization_level
+   in
+   if Sys.command clang_o_command <> 0 then
+     Printf.eprintf "Failed to run clang -o on output.ll\n";
 
-  Sys.remove "output.ll"
+   Sys.remove "output.ll" *)
 
 let () =
   let output_name = ref "a.out" in
@@ -113,10 +113,9 @@ let () =
 
     close_in file_channel;
 
-    remove_entry1_lines "output.ll";
-
-    run_clang_commands ~output:!output_name ~save_asm:!save_asm
-      ~optimization_level:!optimization_level
+    remove_entry1_lines "output.ll"
+    (* run_clang_commands ~output:!output_name ~save_asm:!save_asm
+       ~optimization_level:!optimization_level *)
   with
   | Parser.Error ->
       print_error_position filename lexbuf;

@@ -1,4 +1,9 @@
+fn greet(string name) int {
+    println(name);
+    return 0;
+}
+
 fn main() int {
-    int x = 10 + 2 * 4;
-    return x;
+    greet("Aiden");
+    return 0;
 }
