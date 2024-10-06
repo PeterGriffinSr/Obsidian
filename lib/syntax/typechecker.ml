@@ -4,9 +4,13 @@ module TypeChecker = struct
   module Env = Map.Make (String)
 
   type func_sig = { param_type : Type.t list; return_type : Type.t }
-  type env = { var_type : Type.t Env.t; func_type : func_sig Env.t }
 
-  (* Updated println to accept any type *)
+  type env = {
+    var_type : Type.t Env.t;
+    func_type : func_sig Env.t;
+    enum_type : (string * Type.t) list Env.t;
+  }
+
   let empty_env =
     let println_sig =
       { param_type = []; return_type = Type.SymbolType { value = "void" } }
@@ -14,6 +18,7 @@ module TypeChecker = struct
     {
       var_type = Env.empty;
       func_type = Env.add "println" println_sig Env.empty;
+      enum_type = Env.empty;
     }
 
   let lookup_function env name =
@@ -37,6 +42,9 @@ module TypeChecker = struct
         | Plus | Minus | Star | Slash | Percent | Power ->
             if left_type = right_type then left_type
             else failwith "Type mismatch in arithmetic expression"
+        | Eq | Neq | Less | Greater | Leq | Geq ->
+            if left_type = right_type then Type.SymbolType { value = "bool" }
+            else failwith "Type mismatch in comparison expression"
         | _ -> failwith "Unsupported operator in binary expression")
     | Expr.VarExpr name -> lookup_variables env name
     | Expr.CallExpr { callee; arguments } ->
@@ -51,18 +59,75 @@ module TypeChecker = struct
             ("TypeChecker: Incorrect number of arguments for function "
            ^ func_name);
         List.iter2
-          (fun arg _param_type ->
-            let _arg_type = check_expr env arg in
-            (* No need for detailed argument type checking for println *)
-            ())
+          (fun arg param_type ->
+            let arg_type = check_expr env arg in
+            if arg_type <> param_type then
+              failwith
+                ("TypeChecker: Argument type mismatch in call to function "
+               ^ func_name))
           arguments param_type;
         return_type
-    (* Updated println: Accepts any type without casting *)
+    | Expr.UnaryExpr { operator; operand } -> (
+        let operand_type = check_expr env operand in
+        match operator with
+        | Ast.Not ->
+            if operand_type = Ast.Type.SymbolType { value = "bool" } then
+              Ast.Type.SymbolType { value = "bool" }
+            else
+              failwith "TypeChecker: Operand of NOT operator must be a boolean"
+        | Ast.Inc | Ast.Dec ->
+            if
+              operand_type = Ast.Type.SymbolType { value = "int" }
+              || operand_type = Ast.Type.SymbolType { value = "float" }
+            then operand_type
+            else
+              failwith
+                "TypeChecker: Operand of INC/DEC must be an integer or float"
+        | _ -> failwith "TypeChecker: Unsupported unary operator")
     | Expr.PrintlnExpr { expr } ->
-        (* Check the expression without enforcing a specific type *)
         let _ = check_expr env expr in
         Type.SymbolType { value = "void" }
+    | Expr.CastExpr { expr; target_type } -> (
+        let source_type = check_expr env expr in
+        match (source_type, target_type) with
+        | Type.SymbolType { value = "int" }, Type.SymbolType { value = "float" }
+        | Type.SymbolType { value = "float" }, Type.SymbolType { value = "int" }
+        | ( Type.SymbolType { value = "int" },
+            Type.SymbolType { value = "string" } )
+        | ( Type.SymbolType { value = "float" },
+            Type.SymbolType { value = "string" } )
+        | Type.SymbolType { value = "bool" }, Type.SymbolType { value = "int" }
+        | ( Type.SymbolType { value = "bool" },
+            Type.SymbolType { value = "string" } )
+        | ( Type.SymbolType { value = "char" },
+            Type.SymbolType { value = "string" } ) ->
+            target_type
+        | _ when source_type = target_type -> target_type
+        | _ ->
+            failwith
+              ("TypeChecker: Unsupported cast from " ^ Type.show source_type
+             ^ " to " ^ Type.show target_type))
+    | Expr.TypeofExpr { expr } ->
+        let _ = check_expr env expr in
+        Type.SymbolType { value = "string" }
+    | Expr.SizeofExpr { type_expr } -> (
+        match type_expr with
+        | Ast.Type.SymbolType { value = "int" }
+        | Ast.Type.SymbolType { value = "float" }
+        | Ast.Type.SymbolType { value = "char" }
+        | Ast.Type.SymbolType { value = "string" }
+        | Ast.Type.SymbolType { value = "bool" } ->
+            Type.SymbolType { value = "int" }
+        | _ -> failwith "TypeChecker: Unsupported type for sizeof")
     | _ -> failwith "Unsupported expression"
+
+  let check_enum_decl env name members =
+    let enum_type =
+      List.map
+        (fun member -> (member, Type.SymbolType { value = name }))
+        members
+    in
+    { env with enum_type = Env.add name enum_type env.enum_type }
 
   let check_variable_decl env identifier explicit_type assigned_value =
     match assigned_value with
@@ -85,7 +150,9 @@ module TypeChecker = struct
     in
     let func_sig = { param_type; return_type } in
     let func_type = Env.add name func_sig env.func_type in
-    let new_env = { var_type = var_env; func_type } in
+    let new_env =
+      { var_type = var_env; func_type; enum_type = env.enum_type }
+    in
     let _ = check_block new_env body ~expected_return_type:(Some return_type) in
     { env with func_type }
 
@@ -114,6 +181,59 @@ module TypeChecker = struct
                ^ ", got " ^ Type.show return_type)
             else env
         | None -> env)
+    | Stmt.IfStmt { condition; then_branch; else_branch } ->
+        let cond_type = check_expr env condition in
+        if cond_type <> Ast.Type.SymbolType { value = "bool" } then
+          failwith "TypeChecker: Condition in if statement must be a boolean"
+        else
+          let env_then = check_stmt env ~expected_return_type then_branch in
+          let env_final =
+            match else_branch with
+            | Some else_branch ->
+                check_stmt env_then ~expected_return_type else_branch
+            | None -> env_then
+          in
+          env_final
+    | Stmt.SwitchStmt { expr; cases; default_case } ->
+        let switch_type = check_expr env expr in
+        List.iter
+          (fun (case_expr, case_body) ->
+            let case_type = check_expr env case_expr in
+            if case_type <> switch_type then
+              failwith
+                "TypeChecker: Case expression type does not match switch \
+                 expression";
+            ignore (check_block env case_body ~expected_return_type))
+          cases;
+        (match default_case with
+        | Some body -> ignore (check_block env body ~expected_return_type)
+        | None -> ());
+        env
+    | Stmt.ForStmt { initialization; condition; iteration; body } ->
+        let env =
+          match initialization with
+          | Some stmt -> check_stmt env ~expected_return_type:None stmt
+          | None -> env
+        in
+        let _ =
+          let cond_type = check_expr env condition in
+          if cond_type <> Ast.Type.SymbolType { value = "bool" } then
+            failwith "TypeChecker: Condition in for statement must be a boolean"
+        in
+        let env =
+          match iteration with
+          | Some stmt -> check_stmt env ~expected_return_type:None stmt
+          | None -> env
+        in
+        check_block env [ body ] ~expected_return_type
+    | Stmt.WhileStmt { expr; body } ->
+        let _ =
+          let cond_type = check_expr env expr in
+          if cond_type <> Ast.Type.SymbolType { value = "bool" } then
+            failwith "TypeChecker: Condition in for statement must be a boolean"
+        in
+        check_block env body ~expected_return_type
+    | Stmt.EnumDeclStmt { name; members } -> check_enum_decl env name members
     | _ -> failwith "Unsupported statement"
 
   and check_block env stmts ~expected_return_type =

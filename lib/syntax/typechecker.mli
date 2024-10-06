@@ -49,12 +49,18 @@ module TypeChecker : sig
   end
 
   type func_sig = { param_type : Ast.Type.t list; return_type : Ast.Type.t }
-  type env = { var_type : Ast.Type.t Env.t; func_type : func_sig Env.t }
+
+  type env = {
+    var_type : Ast.Type.t Env.t;
+    func_type : func_sig Env.t;
+    enum_type : (string * Ast.Type.t) list Env.t;
+  }
 
   val empty_env : env
   val lookup_function : env -> Env.key -> func_sig
   val lookup_variables : env -> Env.key -> Ast.Type.t
   val check_expr : env -> Ast.Expr.t -> Ast.Type.t
+  val check_enum_decl : env -> Env.key -> string list -> env
 
   val check_variable_decl :
     env -> Env.key -> Ast.Type.t -> Ast.Expr.t option -> env

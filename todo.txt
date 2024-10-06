@@ -1,9 +1,8 @@
-Fix void
+Fix void // Fix calltmp for void
 Add Concat
-Add comparison
-Add If/Else
-Add Switch
-Add Loops
+Add Alloc
+Add Dealloc
 Add Enum
 Add Class
 Add Import/Export
+Add Unsafe

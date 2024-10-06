@@ -14,6 +14,27 @@ let variables = Hashtbl.create 10
 let printf_type = var_arg_function_type i64_type [| string_type |]
 let printf_func = declare_function "printf" printf_type the_module
 
+let type_size_in_bytes = function
+  | Ast.Type.SymbolType { value = "int" } -> 8 (* Assuming 64-bit integers *)
+  | Ast.Type.SymbolType { value = "float" } ->
+      8 (* Assuming 64-bit floating-point *)
+  | Ast.Type.SymbolType { value = "char" } -> 1 (* Assuming 1 byte for char *)
+  | Ast.Type.SymbolType { value = "string" } ->
+      8 (* Assuming a pointer size of 8 bytes for strings *)
+  | Ast.Type.SymbolType { value = "bool" } ->
+      1 (* Assuming 1 byte for boolean *)
+  | _ -> failwith "Unsupported type for sizeof"
+
+let string_of_llvm_type llvm_type =
+  match classify_type llvm_type with
+  | TypeKind.Integer -> "int"
+  | TypeKind.Double -> "float"
+  | TypeKind.Pointer -> "string"
+  | TypeKind.Void -> "void"
+  | TypeKind.Float -> "float"
+  | TypeKind.Function -> "function"
+  | _ -> "unknown"
+
 let print_any_type value llvm_type =
   match classify_type llvm_type with
   | TypeKind.Integer ->
@@ -51,7 +72,22 @@ let rec codegen_expr = function
       | Ast.Star, false, false -> build_mul left_val right_val "multmp" builder
       | Ast.Slash, false, false ->
           build_sdiv left_val right_val "divtmp" builder
+      | Ast.Eq, false, false ->
+          build_icmp Icmp.Eq left_val right_val "eqtmp" builder
+      | Ast.Neq, false, false ->
+          build_icmp Icmp.Ne left_val right_val "neqtmp" builder
+      | Ast.Leq, false, false ->
+          build_icmp Icmp.Sle left_val right_val "leqtmp" builder
+      | Ast.Geq, false, false ->
+          build_icmp Icmp.Sge left_val right_val "geqtmp" builder
+      | Ast.Less, false, false ->
+          build_icmp Icmp.Slt left_val right_val "letmp" builder
+      | Ast.Greater, false, false ->
+          build_icmp Icmp.Sgt left_val right_val "getmp" builder
       | _ -> failwith "Mixed or unsupported operand types for binary operation")
+  | Expr.SizeofExpr { type_expr } ->
+      let size_in_bytes = type_size_in_bytes type_expr in
+      const_int i64_type size_in_bytes
   | Expr.VarExpr identifier -> (
       try
         let var_alloca = Hashtbl.find variables identifier in
@@ -77,6 +113,49 @@ let rec codegen_expr = function
       let value = codegen_expr expr in
       let llvm_type = type_of value in
       print_any_type value llvm_type
+  | Expr.UnaryExpr { operator; operand } -> (
+      let var_val = codegen_expr operand in
+      let var_name =
+        match operand with
+        | Expr.VarExpr identifier -> identifier
+        | _ -> failwith "Increment/Decrement can only be applied to variables"
+      in
+      match operator with
+      | Ast.Inc ->
+          let incremented =
+            build_add var_val (const_int i64_type 1) "inctmp" builder
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          ignore (build_store incremented var_alloca builder);
+          incremented
+      | Ast.Dec ->
+          let decremented =
+            build_sub var_val (const_int i64_type 1) "dectmp" builder
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          ignore (build_store decremented var_alloca builder);
+          decremented
+      | _ -> failwith "Unsupported unary operator")
+  | Expr.CastExpr { expr; target_type } -> (
+      let value = codegen_expr expr in
+      let target_llvm_type =
+        match target_type with
+        | Ast.Type.SymbolType { value = "int" } -> i64_type
+        | Ast.Type.SymbolType { value = "float" } -> f64_type
+        | Ast.Type.SymbolType { value = "string" } -> string_type
+        | _ -> failwith "Unsupported target type for cast"
+      in
+      match (classify_type (type_of value), classify_type target_llvm_type) with
+      | TypeKind.Integer, TypeKind.Double ->
+          build_sitofp value target_llvm_type "casttmp" builder
+      | TypeKind.Double, TypeKind.Integer ->
+          build_fptosi value target_llvm_type "casttmp" builder
+      | _, _ when type_of value = target_llvm_type -> value
+      | _ -> failwith "Unsupported cast operation")
+  | Expr.TypeofExpr { expr } ->
+      let value = codegen_expr expr in
+      let llvm_type_str = string_of_llvm_type (type_of value) in
+      build_global_stringptr llvm_type_str "typestrtmp" builder
   | _ -> failwith "Expression not implemented"
 
 let rec codegen_stmt = function
@@ -143,19 +222,144 @@ let rec codegen_stmt = function
         (params the_function);
 
       let return_generated = ref false in
+      let is_void_return = llvm_return_type = void_type in
+
       List.iter
         (fun stmt ->
           match stmt with
           | Stmt.ReturnStmt _ when not !return_generated ->
-              let ret_val = codegen_stmt stmt in
-              ignore (build_ret ret_val builder);
-              return_generated := true
+              if is_void_return then (
+                ignore (build_ret_void builder);
+                return_generated := true)
+              else
+                let ret_val = codegen_stmt stmt in
+                ignore (build_ret ret_val builder);
+                return_generated := true
           | _ when not !return_generated -> ignore (codegen_stmt stmt)
           | _ -> ())
         body;
 
+      if (not !return_generated) && is_void_return then
+        ignore (build_ret_void builder);
+
       the_function
   | Stmt.ReturnStmt expr -> codegen_expr expr
+  | Stmt.SwitchStmt { expr; cases; default_case } ->
+      let cond_val = codegen_expr expr in
+      let start_bb = insertion_block builder in
+      let the_function = block_parent start_bb in
+      let merge_bb = append_block context "switchcont" the_function in
+      let default_bb =
+        match default_case with
+        | Some _ -> append_block context "default" the_function
+        | None -> merge_bb
+      in
+
+      let switch_inst =
+        build_switch cond_val default_bb (List.length cases) builder
+      in
+
+      List.iter
+        (fun (case_val, case_body) ->
+          let case_block = append_block context "case" the_function in
+          position_at_end case_block builder;
+
+          List.iter (fun stmt -> ignore (codegen_stmt stmt)) case_body;
+
+          ignore (build_br merge_bb builder);
+
+          let case_const = codegen_expr case_val in
+          add_case switch_inst case_const case_block)
+        cases;
+
+      (match default_case with
+      | Some default_body ->
+          position_at_end default_bb builder;
+          List.iter (fun stmt -> ignore (codegen_stmt stmt)) default_body;
+          ignore (build_br merge_bb builder)
+      | None -> ());
+
+      position_at_end merge_bb builder;
+      const_int i64_type 0
+  | Stmt.IfStmt { condition; then_branch; else_branch } ->
+      let cond_val = codegen_expr condition in
+      let zero = const_int i1_type 0 in
+      let cond_bool = build_icmp Icmp.Ne cond_val zero "ifcond" builder in
+      let start_bb = insertion_block builder in
+      let the_function = block_parent start_bb in
+      let then_bb = append_block context "then" the_function in
+      let else_bb = append_block context "else" the_function in
+      let merge_bb = append_block context "ifcont" the_function in
+      ignore (build_cond_br cond_bool then_bb else_bb builder);
+      position_at_end then_bb builder;
+      ignore (codegen_stmt then_branch);
+      ignore (build_br merge_bb builder);
+      position_at_end else_bb builder;
+      (match else_branch with
+      | Some body -> ignore (codegen_stmt body)
+      | None -> ());
+      ignore (build_br merge_bb builder);
+      position_at_end merge_bb builder;
+      const_int i64_type 0
+  | Stmt.WhileStmt { expr; body } ->
+      let cond_bb =
+        append_block context "while.cond"
+          (block_parent (insertion_block builder))
+      in
+      let body_bb =
+        append_block context "while.body"
+          (block_parent (insertion_block builder))
+      in
+      let after_bb =
+        append_block context "while.end"
+          (block_parent (insertion_block builder))
+      in
+
+      ignore (build_br cond_bb builder);
+      position_at_end cond_bb builder;
+
+      let cond_val = codegen_expr expr in
+      let zero = const_int i1_type 0 in
+      let cond_bool = build_icmp Icmp.Ne cond_val zero "whilecond" builder in
+      ignore (build_cond_br cond_bool body_bb after_bb builder);
+
+      position_at_end body_bb builder;
+      List.iter (fun stmt -> ignore (codegen_stmt stmt)) body;
+      ignore (build_br cond_bb builder);
+
+      position_at_end after_bb builder;
+      const_int i64_type 0
+  | Stmt.ForStmt { initialization; condition; iteration; body } ->
+      let init_bb = insertion_block builder in
+      let cond_bb = append_block context "for.cond" (block_parent init_bb) in
+      let body_bb = append_block context "for.body" (block_parent init_bb) in
+      let iter_bb = append_block context "for.iter" (block_parent init_bb) in
+      let after_bb = append_block context "for.end" (block_parent init_bb) in
+
+      (match initialization with
+      | Some init_stmt -> ignore (codegen_stmt init_stmt)
+      | None -> ());
+
+      ignore (build_br cond_bb builder);
+      position_at_end cond_bb builder;
+
+      let cond_val = codegen_expr condition in
+      let zero = const_int i1_type 0 in
+      let cond_bool = build_icmp Icmp.Ne cond_val zero "forcond" builder in
+      ignore (build_cond_br cond_bool body_bb after_bb builder);
+
+      position_at_end body_bb builder;
+      ignore (codegen_stmt body);
+      ignore (build_br iter_bb builder);
+
+      position_at_end iter_bb builder;
+      (match iteration with
+      | Some iter_stmt -> ignore (codegen_stmt iter_stmt)
+      | None -> ());
+      ignore (build_br cond_bb builder);
+
+      position_at_end after_bb builder;
+      const_int i64_type 0
   | _ -> failwith "Statement not implemented"
 
 let generate_code ast =

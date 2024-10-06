@@ -3,7 +3,48 @@ fn greet(string name) int {
     return 0;
 }
 
+fn add(int x, int y) int {
+    return x + y;
+}
+
+fn voidFunc() void {
+    println("Hello");
+}
+
 fn main() int {
-    greet("Aiden");
+    // int x = 1;
+    // bool y = false;
+    // string z = "Hello0";
+
+    // switch (y) {
+    //     case true:
+    //         println("x is 5");
+    //     case false:
+    //         println("x is 6");
+    //     default:
+    //         println("case not found!");
+    // }
+
+    // if (z == "Hello") {
+    //     println("z is hello");
+    // }
+
+    // int i = 0;
+    // while (i < 1) {
+    //     println("Hello, world");
+    //     i++;
+    // }
+
+    // for (int j = 4; j <= 5; j++) {
+    //     println("Hello, world!");
+    // }
+
+    int yy = 5;
+    float fyy = cast(yy, float); // 5 -> 5.5
+
+    println(typeof(fyy));
+    println(typeof(yy));
+    println(sizeof(float));
+
     return 0;
 }
