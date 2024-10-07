@@ -41,9 +41,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install dependencies (opam, MSYS2)
+      - name: Install OCaml and dependencies using Chocolatey
         run: |
-          winget install Git.Git OCaml.opam
+          choco install git
+          choco install ocaml
+          choco install opam
+
+      - name: Initialize opam
+        run: |
           opam init -y --disable-sandboxing
           eval $(opam env)
           opam switch create 4.14.1
