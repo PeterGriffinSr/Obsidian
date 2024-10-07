@@ -13,16 +13,54 @@ let string_type = pointer_type (i8_type context)
 let variables = Hashtbl.create 10
 let printf_type = var_arg_function_type i64_type [| string_type |]
 let printf_func = declare_function "printf" printf_type the_module
+let malloc_type = function_type string_type [| i64_type |]
+let malloc_func = declare_function "malloc" malloc_type the_module
+let scanf_type = var_arg_function_type i64_type [| string_type |]
+let scanf_func = declare_function "scanf" scanf_type the_module
+
+let free_func =
+  declare_function "free" (function_type void_type [| string_type |]) the_module
+
+let strcpy_func =
+  declare_function "strcpy"
+    (function_type string_type [| string_type; string_type |])
+    the_module
+
+let strcat_func =
+  declare_function "strcat"
+    (function_type string_type [| string_type; string_type |])
+    the_module
+
+let strlen_func =
+  declare_function "strlen"
+    (function_type i64_type [| string_type |])
+    the_module
+
+let concatenate_strings left right =
+  let left_len = build_call strlen_func [| left |] "leftlen" builder in
+  let right_len = build_call strlen_func [| right |] "rightlen" builder in
+
+  let total_len = build_add left_len right_len "totallen" builder in
+  let total_len_with_null =
+    build_add total_len (const_int i64_type 1) "lenwithnull" builder
+  in
+
+  let result =
+    build_call malloc_func [| total_len_with_null |] "concatresult" builder
+  in
+
+  ignore (build_call strcpy_func [| result; left |] "cpyres" builder);
+
+  ignore (build_call strcat_func [| result; right |] "catres" builder);
+
+  result
 
 let type_size_in_bytes = function
   | Ast.Type.SymbolType { value = "int" } -> 8
-  | Ast.Type.SymbolType { value = "float" } ->
-      8
+  | Ast.Type.SymbolType { value = "float" } -> 8
   | Ast.Type.SymbolType { value = "char" } -> 1
-  | Ast.Type.SymbolType { value = "string" } ->
-      8
-  | Ast.Type.SymbolType { value = "bool" } ->
-      1
+  | Ast.Type.SymbolType { value = "string" } -> 8
+  | Ast.Type.SymbolType { value = "bool" } -> 1
   | _ -> failwith "Unsupported type for sizeof"
 
 let string_of_llvm_type llvm_type =
@@ -84,6 +122,11 @@ let rec codegen_expr = function
           build_icmp Icmp.Slt left_val right_val "letmp" builder
       | Ast.Greater, false, false ->
           build_icmp Icmp.Sgt left_val right_val "getmp" builder
+      | Ast.LogicalAnd, false, false ->
+          build_and left_val right_val "andtmp" builder
+      | Ast.LogicalOr, false, false ->
+          build_or left_val right_val "ortmp" builder
+      | Ast.Carot, false, false -> concatenate_strings left_val right_val
       | _ -> failwith "Mixed or unsupported operand types for binary operation")
   | Expr.SizeofExpr { type_expr } ->
       let size_in_bytes = type_size_in_bytes type_expr in
@@ -109,10 +152,17 @@ let rec codegen_expr = function
              ^ func_name);
           build_call func arg_vals_array "calltmp" builder
       | None -> failwith ("Codegen error: Unknown function " ^ func_name))
-  | Expr.PrintlnExpr { expr } ->
+  | Expr.PrintlnExpr { expr } -> (
       let value = codegen_expr expr in
       let llvm_type = type_of value in
-      print_any_type value llvm_type
+      match classify_type llvm_type with
+      | TypeKind.Pointer ->
+          let format_str = build_global_stringptr "%s\n" "str_fmt" builder in
+          ignore
+            (build_call printf_func [| format_str; value |] "printtmp" builder);
+          let _ = build_call free_func [| value |] "" builder in
+          value
+      | _ -> print_any_type value llvm_type)
   | Expr.UnaryExpr { operator; operand } -> (
       let var_val = codegen_expr operand in
       let var_name =
@@ -121,6 +171,7 @@ let rec codegen_expr = function
         | _ -> failwith "Increment/Decrement can only be applied to variables"
       in
       match operator with
+      | Ast.Not -> build_not var_val "nottmp" builder
       | Ast.Inc ->
           let incremented =
             build_add var_val (const_int i64_type 1) "inctmp" builder
@@ -150,12 +201,60 @@ let rec codegen_expr = function
           build_sitofp value target_llvm_type "casttmp" builder
       | TypeKind.Double, TypeKind.Integer ->
           build_fptosi value target_llvm_type "casttmp" builder
+      | TypeKind.Pointer, TypeKind.Pointer ->
+          build_bitcast value target_llvm_type "casttmp" builder
+      | TypeKind.Integer, TypeKind.Pointer ->
+          build_inttoptr value target_llvm_type "casttmp" builder
+      | TypeKind.Pointer, TypeKind.Integer ->
+          build_ptrtoint value target_llvm_type "casttmp" builder
       | _, _ when type_of value = target_llvm_type -> value
       | _ -> failwith "Unsupported cast operation")
   | Expr.TypeofExpr { expr } ->
       let value = codegen_expr expr in
       let llvm_type_str = string_of_llvm_type (type_of value) in
       build_global_stringptr llvm_type_str "typestrtmp" builder
+  | Expr.LengthExpr { expr } ->
+      let value = codegen_expr expr in
+      if classify_type (type_of value) <> TypeKind.Pointer then
+        failwith "LengthExpr is only valid for strings";
+      let strlen_function =
+        match lookup_function "strlen" the_module with
+        | Some f -> f
+        | None ->
+            let strlen_type = function_type i64_type [| string_type |] in
+            declare_function "strlen" strlen_type the_module
+      in
+      build_call strlen_function [| value |] "lentmp" builder
+  | Expr.InputExpr { prompt; target_type } -> (
+      let prompt_str = build_global_stringptr prompt "promptstr" builder in
+      ignore (build_call printf_func [| prompt_str |] "printprompt" builder);
+
+      match target_type with
+      | Ast.Type.SymbolType { value = "int" } ->
+          let int_ptr = build_alloca i64_type "intinput" builder in
+          let format_str = build_global_stringptr "%ld" "int_fmt" builder in
+          ignore (build_call scanf_func [| format_str; int_ptr |] "" builder);
+          build_load int_ptr "intresult" builder
+      | Ast.Type.SymbolType { value = "float" } ->
+          let float_ptr = build_alloca f64_type "floatinput" builder in
+          let format_str = build_global_stringptr "%lf" "float_fmt" builder in
+          ignore (build_call scanf_func [| format_str; float_ptr |] "" builder);
+          build_load float_ptr "floatresult" builder
+      | Ast.Type.SymbolType { value = "char" } ->
+          let char_ptr = build_alloca char_type "charinput" builder in
+          let format_str = build_global_stringptr "%c" "char_fmt" builder in
+          ignore (build_call scanf_func [| format_str; char_ptr |] "" builder);
+          build_load char_ptr "charresult" builder
+      | Ast.Type.SymbolType { value = "string" } ->
+          let str_ptr =
+            build_call malloc_func
+              [| const_int i64_type 256 |]
+              "strinput" builder
+          in
+          let format_str = build_global_stringptr "%s" "str_fmt" builder in
+          ignore (build_call scanf_func [| format_str; str_ptr |] "" builder);
+          str_ptr
+      | _ -> failwith "Codegen: Unsupported type for input")
   | _ -> failwith "Expression not implemented"
 
 let rec codegen_stmt = function

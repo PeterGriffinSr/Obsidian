@@ -45,6 +45,23 @@ module TypeChecker = struct
         | Eq | Neq | Less | Greater | Leq | Geq ->
             if left_type = right_type then Type.SymbolType { value = "bool" }
             else failwith "Type mismatch in comparison expression"
+        | Carot ->
+            if
+              left_type = Type.SymbolType { value = "string" }
+              && right_type = Type.SymbolType { value = "string" }
+            then Type.SymbolType { value = "string" }
+            else
+              failwith
+                "TypeChecker: Type mismatch in string concatenation, both \
+                 operands must be strings"
+        | LogicalAnd | LogicalOr ->
+            if
+              (left_type = Type.SymbolType { value = "bool" }
+              || left_type = Type.SymbolType { value = "int" })
+              && (left_type = Type.SymbolType { value = "bool" }
+                 || right_type = Type.SymbolType { value = "int" })
+            then Ast.Type.SymbolType { value = "bool" }
+            else failwith "TypeChecker: Type mismatch in logical expression"
         | _ -> failwith "Unsupported operator in binary expression")
     | Expr.VarExpr name -> lookup_variables env name
     | Expr.CallExpr { callee; arguments } ->
@@ -87,6 +104,11 @@ module TypeChecker = struct
     | Expr.PrintlnExpr { expr } ->
         let _ = check_expr env expr in
         Type.SymbolType { value = "void" }
+    | Expr.LengthExpr { expr } ->
+        let expr_type = check_expr env expr in
+        if expr_type = Type.SymbolType { value = "string" } then
+          Type.SymbolType { value = "int" }
+        else failwith "TypeChecker: length can only be applied to a string"
     | Expr.CastExpr { expr; target_type } -> (
         let source_type = check_expr env expr in
         match (source_type, target_type) with
@@ -119,6 +141,14 @@ module TypeChecker = struct
         | Ast.Type.SymbolType { value = "bool" } ->
             Type.SymbolType { value = "int" }
         | _ -> failwith "TypeChecker: Unsupported type for sizeof")
+    | Expr.InputExpr { prompt = _; target_type } -> (
+        match target_type with
+        | Type.SymbolType { value = "int" }
+        | Type.SymbolType { value = "float" }
+        | Type.SymbolType { value = "char" }
+        | Type.SymbolType { value = "string" } ->
+            target_type
+        | _ -> failwith "TypeChecker: Unsupported type for input")
     | _ -> failwith "Unsupported expression"
 
   let check_enum_decl env name members =
@@ -136,7 +166,8 @@ module TypeChecker = struct
         if value_type = explicit_type then
           { env with var_type = Env.add identifier explicit_type env.var_type }
         else failwith ("Type mismatch in variable declaration: " ^ identifier)
-    | None -> failwith ("Variable " ^ identifier ^ " has no value assigned")
+    | None ->
+        { env with var_type = Env.add identifier explicit_type env.var_type }
 
   let rec check_func_decl env name parameters return_type body =
     let param_type =

@@ -1,5 +1,4 @@
 // Hello, world in Obsidian
-
 fn main() int { // Entry point for the program
     println("Hello, world!"); // Display's Hello, world! to the console 
     return 0; // Return successful

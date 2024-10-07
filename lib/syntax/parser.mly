@@ -2,7 +2,7 @@
 %left Star Slash Percent
 %left Power
 
-%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println
+%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input
 
 %token <string> Identifier
 %token <int> IntLit
@@ -88,6 +88,8 @@ expr:
     | Cast LParen expr Comma type_expr RParen { Ast.Expr.CastExpr { expr = $3; target_type = $5 } }
     | Typeof LParen expr RParen { Ast.Expr.TypeofExpr { expr = $3 } }
     | Println LParen expr RParen { Ast.Expr.PrintlnExpr { expr = $3 } }
+    | Length LParen expr RParen { Ast.Expr.LengthExpr { expr = $3 } }
+    | Input LParen StringLit Comma type_expr RParen { Ast.Expr.InputExpr { prompt = $3; target_type = $5 } }
 
 parameter:
     | type_expr Identifier { Ast.Stmt.{ name = $2; param_type = $1 } }

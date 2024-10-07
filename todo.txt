@@ -1,7 +1,4 @@
 Fix void // Fix calltmp for void
-Add Concat
-Add Length
-Add Input
 Add Alloc
 Add Dealloc
 Add Enum
@@ -9,3 +6,5 @@ Add Class
 Add Import/Export
 Add Unsafe
 Add Arrays
+Add Recursion // Will do when I'm happy
+Add Var Redecl

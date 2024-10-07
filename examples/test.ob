@@ -1,0 +1,24 @@
+fn main() int {
+    // bool a = true;
+    // bool b = true;
+    // bool x = false;
+    // bool y = false;
+    // if (a && b == true) {
+    //     println("true");
+    // } else {
+    //     println("false");
+    // }
+    // if (x == true || y == true) {
+    //     println("e");
+    // } else {
+    //     println("r");
+    // }
+    // bool x = false;
+    // while (!x) {
+    //     println("e");
+    // }
+    // println("hello, " ^ "world");
+    string x = input("Enter name: ", string);
+    println(x);
+    return 0;
+}

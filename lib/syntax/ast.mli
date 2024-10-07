@@ -90,7 +90,9 @@ module Expr : sig
     | SizeofExpr of { type_expr : Type.t }
     | CastExpr of { expr : t; target_type : Type.t }
     | TypeofExpr of { expr : t }
+    | LengthExpr of { expr : t }
     | PrintlnExpr of { expr : t }
+    | InputExpr of { prompt : string; target_type : Type.t }
     | NewExpr of { class_name : string }
     | MethodCall of { obj : t; method_name : string; arguments : t list }
 

@@ -63,6 +63,8 @@ rule token = parse
     | "export"              { ignore (update_column_with_lexeme lexbuf); Export }
     | "cast"                { ignore (update_column_with_lexeme lexbuf); Cast }
     | "println"             { ignore (update_column_with_lexeme lexbuf); Println }
+    | "input"               { ignore (update_column_with_lexeme lexbuf); Input }
+    | "len"                 { ignore (update_column_with_lexeme lexbuf); Length }
 
     | "("                   { token_and_update_column LParen lexbuf }
     | ")"                   { token_and_update_column RParen lexbuf }
