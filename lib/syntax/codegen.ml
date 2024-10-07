@@ -15,14 +15,14 @@ let printf_type = var_arg_function_type i64_type [| string_type |]
 let printf_func = declare_function "printf" printf_type the_module
 
 let type_size_in_bytes = function
-  | Ast.Type.SymbolType { value = "int" } -> 8 (* Assuming 64-bit integers *)
+  | Ast.Type.SymbolType { value = "int" } -> 8
   | Ast.Type.SymbolType { value = "float" } ->
-      8 (* Assuming 64-bit floating-point *)
-  | Ast.Type.SymbolType { value = "char" } -> 1 (* Assuming 1 byte for char *)
+      8
+  | Ast.Type.SymbolType { value = "char" } -> 1
   | Ast.Type.SymbolType { value = "string" } ->
-      8 (* Assuming a pointer size of 8 bytes for strings *)
+      8
   | Ast.Type.SymbolType { value = "bool" } ->
-      1 (* Assuming 1 byte for boolean *)
+      1
   | _ -> failwith "Unsupported type for sizeof"
 
 let string_of_llvm_type llvm_type =

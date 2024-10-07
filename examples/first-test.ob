@@ -3,13 +3,21 @@ fn greet(string name) int {
     return 0;
 }
 
+// fn fib(int n) int {
+//     if (n < 1) {
+//         return 1;
+//     }
+
+//     return fib(n - 1) + fib(n - 2);
+// }
+
 fn add(int x, int y) int {
     return x + y;
 }
 
 fn main() int {
-    bool y = false;
-    string z = "Hello";
+   bool y = false;
+   string z = "Hello";
 
     switch (y) {
         case true:
@@ -34,6 +42,8 @@ fn main() int {
         println("Hello, world!");
     }
 
+    // println(fib(10));
+
     int yy = 5;
     float fyy = cast(yy, float); // 5 -> 5.5
 
@@ -45,4 +55,4 @@ fn main() int {
     greet("Azlo");
     
     return 0;
-}
+} 
