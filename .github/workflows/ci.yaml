@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-linux:
+    runs-on: archlinux
 
     steps:
       - name: Checkout code
@@ -28,6 +28,25 @@ jobs:
 
       - name: Install dependencies
         run: |
+          opam install dune menhir llvm.14.0.6 ppx_deriving odoc
+
+      - name: Build project
+        run: |
+          dune build
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (opam, MSYS2)
+        run: |
+          winget install Git.Git OCaml.opam
+          opam init -y --disable-sandboxing
+          eval $(opam env)
+          opam switch create 4.14.1
           opam install dune menhir llvm.14.0.6 ppx_deriving odoc
 
       - name: Build project
