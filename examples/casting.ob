@@ -1,0 +1,10 @@
+// Casting type
+fn main() int {
+    int x = 5;
+    float fx = cast(x, float); // Casting type int to type float
+
+    float y = 5.0;
+    int iy = cast(y, int); // Casting type float to type int
+
+    return 0;
+}

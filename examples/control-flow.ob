@@ -1,0 +1,31 @@
+// Control-Flow examples in Obsidian
+fn main() int {
+    bool y = false;
+    string z = "Hello";
+
+    switch (y) {
+        case true:
+            println("true");
+        case false:
+            println("false");
+        default:
+            println("case not found!");
+    }
+
+    if (z == "Hello") {
+        println("z == hello");
+    } else {
+        println("z != hello");
+    }
+
+    int i = 0;
+    while (i < 1) {
+        println("Hello, world");
+        i++;
+    }
+    
+    for (int j = 0; j <= 5; j++) {
+        println("Hello, world!");
+    }
+    return 0;
+}

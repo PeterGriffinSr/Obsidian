@@ -1,0 +1,10 @@
+// Unsafe Example in Obsidian
+//! Feature not yet implemented
+fn main() int {
+    unsafe {
+        int n;
+        int *ptr = cast(alloc(n * sizeof(int)), *int);
+        dealloc(ptr);
+    }
+    return 0;
+}

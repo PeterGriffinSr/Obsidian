@@ -1,0 +1,15 @@
+// Functions can have all return types
+fn a() int {}
+fn b() float {}
+fn c() string {}
+fn d() char {}
+fn e() bool {}
+// fn f() void {} // While void does exist in the language it's currently not implemented correctly
+
+// Entry point
+fn main() int {
+    // Functions can be called by <function_name> or can be decl as variables
+    int x = a();
+    f();
+    return 0;
+}

@@ -1,0 +1,39 @@
+// Simple calc in Obsidian
+fn add(int x, int y) int {
+    return x + y;
+}
+
+fn sub(int x, int y) int {
+    return x - y;
+}
+
+fn mult(int x, int y) int {
+    return x * y;
+}
+
+fn div(int x, int y) float {
+    if (y == 0) {
+        println("Can't divide by zero");
+    }
+    return cast(x / y, float);
+}
+
+fn main() int {
+    char op = '*';
+    int x = 5;
+    int y = 10; 
+
+    switch (op) {
+        case '+':
+            println(add(x, y));
+        case '-':
+            println(sub(x, y));
+        case '*':
+            println(mult(x, y));
+        case '/':
+            println(div(y, x));
+        default:
+            println("case not found!");
+    }
+    return 0;
+}
