@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up OCaml environment
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: 4.14.4
+
+      - name: Install dependencies
+        run: |
+          opam install dune menhir llvm.14.0.6 ppx_deriving odoc
+
+      - name: Build project
+        run: |
+          dune build
