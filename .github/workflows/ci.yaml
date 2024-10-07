@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  build-linux:
-    runs-on: archlinux
+  build:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -23,7 +23,7 @@ jobs:
 
       - name: Initialize opam
         run: |
-          opam init -y --disable-sandboxing
+          opam init -y
           eval $(opam env)
 
       - name: Install dependencies
