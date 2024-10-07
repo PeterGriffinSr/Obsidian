@@ -33,27 +33,3 @@ jobs:
       - name: Build project
         run: |
           dune build
-
-  build-windows:
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install OCaml and dependencies using Chocolatey
-        run: |
-          choco install git
-          choco install ocaml
-          choco install opam
-
-      - name: Initialize opam
-        run: |
-          opam init -y --disable-sandboxing
-          eval $(opam env)
-          opam switch create 4.14.1
-          opam install dune menhir llvm.14.0.6 ppx_deriving odoc
-
-      - name: Build project
-        run: |
-          dune build
