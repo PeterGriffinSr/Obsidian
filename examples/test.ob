@@ -11,9 +11,10 @@
 // }
 
 fn main() int {
-    int x = 5;
-    println(x); // print 5
-    x = 6;
-    println(x); // print 6
+    // int x = 5;
+    // println(x); // print 5
+    // x = 6;
+    // println(x); // print 6
+    println("Hello, " ^ "world");
     return 0;
 }

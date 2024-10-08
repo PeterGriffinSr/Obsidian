@@ -77,13 +77,16 @@ let print_any_type value llvm_type =
   match classify_type llvm_type with
   | TypeKind.Integer ->
       let format_str = build_global_stringptr "%ld\n" "int_fmt" builder in
-      build_call printf_func [| format_str; value |] "printtmp" builder
+      ignore (build_call printf_func [| format_str; value |] "printtmp" builder);
+      value
   | TypeKind.Double ->
       let format_str = build_global_stringptr "%f\n" "float_fmt" builder in
-      build_call printf_func [| format_str; value |] "printtmp" builder
+      ignore (build_call printf_func [| format_str; value |] "printtmp" builder);
+      value
   | TypeKind.Pointer ->
       let format_str = build_global_stringptr "%s\n" "str_fmt" builder in
-      build_call printf_func [| format_str; value |] "printtmp" builder
+      ignore (build_call printf_func [| format_str; value |] "printtmp" builder);
+      value
   | TypeKind.Void -> failwith "Cannot print void type"
   | _ -> failwith "Unsupported type for println"
 
@@ -163,7 +166,6 @@ let rec codegen_expr = function
           let format_str = build_global_stringptr "%s\n" "str_fmt" builder in
           ignore
             (build_call printf_func [| format_str; value |] "printtmp" builder);
-          let _ = build_call free_func [| value |] "" builder in
           value
       | _ -> print_any_type value llvm_type)
   | Expr.UnaryExpr { operator; operand } -> (

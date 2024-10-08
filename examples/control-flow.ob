@@ -1,7 +1,7 @@
 // Control-Flow examples in Obsidian
 fn main() int {
     bool y = false;
-    string z = "Hello";
+    string z = "Helloo0";
 
     switch (y) {
         case true:
@@ -15,7 +15,11 @@ fn main() int {
     if (z == "Hello") {
         println("z == hello");
     } else {
-        println("z != hello");
+        if (z == "Helloo") {
+            println("z == Helloo");
+        } else {
+            println("neither");
+        }
     }
 
     int i = 0;

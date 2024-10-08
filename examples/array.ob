@@ -1,4 +1,5 @@
 // Arrays in Obsidian
+//! Feature not yet implemented
 fn main() {
     int[] array = {1, 3, 5};
     string[] sarray = {"Hello", "World"};
