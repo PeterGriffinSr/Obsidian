@@ -146,11 +146,14 @@ let rec codegen_expr = function
       | Some func ->
           let arg_vals = List.map codegen_expr arguments in
           let arg_vals_array = Array.of_list arg_vals in
+          let func_type = return_type (element_type (type_of func)) in
           if Array.length arg_vals_array != Array.length (params func) then
             failwith
               ("Codegen error: Incorrect number of arguments for function "
              ^ func_name);
-          build_call func arg_vals_array "calltmp" builder
+          if classify_type func_type = TypeKind.Void then
+            build_call func arg_vals_array "" builder
+          else build_call func arg_vals_array "calltmp" builder
       | None -> failwith ("Codegen error: Unknown function " ^ func_name))
   | Expr.PrintlnExpr { expr } -> (
       let value = codegen_expr expr in
@@ -255,6 +258,13 @@ let rec codegen_expr = function
           ignore (build_call scanf_func [| format_str; str_ptr |] "" builder);
           str_ptr
       | _ -> failwith "Codegen: Unsupported type for input")
+  | Expr.AssignmentExpr { identifier; value = Some expr_value } -> (
+      try
+        let var_alloca = Hashtbl.find variables identifier in
+        let new_value = codegen_expr expr_value in
+        ignore (build_store new_value var_alloca builder);
+        new_value
+      with Not_found -> failwith ("Unknown variable: " ^ identifier))
   | _ -> failwith "Expression not implemented"
 
 let rec codegen_stmt = function

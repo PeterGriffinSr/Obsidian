@@ -70,8 +70,10 @@ val pp_token : Format.formatter -> token -> unit
 module Type : sig
   type t = SymbolType of { value : string } | PointerType of { base_type : t }
 
-  val pp : Format.formatter -> t -> unit
-  val show : t -> string
+  val pp :
+    Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
+
+  val show : t -> Ppx_deriving_runtime.string
 end
 
 module Expr : sig
@@ -95,16 +97,23 @@ module Expr : sig
     | InputExpr of { prompt : string; target_type : Type.t }
     | NewExpr of { class_name : string }
     | MethodCall of { obj : t; method_name : string; arguments : t list }
+    | AssignmentExpr of { identifier : string; value : t option }
 
-  val pp : Format.formatter -> t -> unit
-  val show : t -> string
+  val pp :
+    Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
+
+  val show : t -> Ppx_deriving_runtime.string
 end
 
 module Stmt : sig
   type parameter = { name : string; param_type : Type.t }
 
-  val pp_parameter : Format.formatter -> parameter -> unit
-  val show_parameter : parameter -> string
+  val pp_parameter :
+    Ppx_deriving_runtime.Format.formatter ->
+    parameter ->
+    Ppx_deriving_runtime.unit
+
+  val show_parameter : parameter -> Ppx_deriving_runtime.string
 
   type t =
     | BlockStmt of { body : t list }
@@ -141,6 +150,8 @@ module Stmt : sig
     | ReturnStmt of Expr.t
     | BreakStmt
 
-  val pp : Format.formatter -> t -> unit
-  val show : t -> string
+  val pp :
+    Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
+
+  val show : t -> Ppx_deriving_runtime.string
 end

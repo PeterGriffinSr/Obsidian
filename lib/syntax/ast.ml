@@ -158,6 +158,7 @@ module Expr = struct
     | InputExpr of { prompt : string; target_type : Type.t }
     | NewExpr of { class_name : string }
     | MethodCall of { obj : t; method_name : string; arguments : t list }
+    | AssignmentExpr of { identifier : string; value : t option }
   [@@deriving show]
 end
 

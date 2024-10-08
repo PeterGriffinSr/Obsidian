@@ -4,7 +4,7 @@ fn b() float {}
 fn c() string {}
 fn d() char {}
 fn e() bool {}
-// fn f() void {} // While void does exist in the language it's currently not implemented correctly
+fn f() void {}
 
 // Entry point
 fn main() int {

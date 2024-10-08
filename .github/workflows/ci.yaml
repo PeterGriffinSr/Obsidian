@@ -28,6 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          eval $(opam env)
           opam install dune menhir llvm.14.0.6 ppx_deriving odoc
 
       - name: Build project

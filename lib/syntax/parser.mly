@@ -90,6 +90,7 @@ expr:
     | Println LParen expr RParen { Ast.Expr.PrintlnExpr { expr = $3 } }
     | Length LParen expr RParen { Ast.Expr.LengthExpr { expr = $3 } }
     | Input LParen StringLit Comma type_expr RParen { Ast.Expr.InputExpr { prompt = $3; target_type = $5 } }
+    | Identifier Assign expr { Ast.Expr.AssignmentExpr { identifier = $1; value = Some $3 } }
 
 parameter:
     | type_expr Identifier { Ast.Stmt.{ name = $2; param_type = $1 } }

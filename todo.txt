@@ -1,4 +1,3 @@
-Fix void // Fix calltmp for void
 Add Alloc
 Add Dealloc
 Add Enum
@@ -7,4 +6,3 @@ Add Import/Export
 Add Unsafe
 Add Arrays
 Add Recursion // Will do when I'm happy
-Add Var Redecl

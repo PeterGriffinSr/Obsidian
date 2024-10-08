@@ -149,6 +149,15 @@ module TypeChecker = struct
         | Type.SymbolType { value = "string" } ->
             target_type
         | _ -> failwith "TypeChecker: Unsupported type for input")
+    | Expr.AssignmentExpr { identifier; value = Some expr_value } ->
+        let var_type = lookup_variables env identifier in
+        let assigned_type = check_expr env expr_value in
+        if var_type <> assigned_type then
+          failwith
+            ("Type mismatch in assignment to variable " ^ identifier
+           ^ ": expected " ^ Type.show var_type ^ ", got "
+           ^ Type.show assigned_type)
+        else var_type
     | _ -> failwith "Unsupported expression"
 
   let check_enum_decl env name members =
