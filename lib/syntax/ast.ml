@@ -56,6 +56,8 @@ type token =
   | Cast
   | This
   | Println
+  | MinusAssign
+  | PlusAssign
   | Identifier of string
   | Int of int
   | Float of float
@@ -123,6 +125,8 @@ let pp_token fmt = function
   | Private -> Format.fprintf fmt "Private"
   | This -> Format.fprintf fmt "This"
   | Println -> Format.fprintf fmt "Println"
+  | MinusAssign -> Format.fprintf fmt "MinusAssign"
+  | PlusAssign -> Format.fprintf fmt "PlusAssign"
   | Identifier s -> Format.fprintf fmt "Identifier(%s)" s
   | Int i -> Format.fprintf fmt "Int(%d)" i
   | Float f -> Format.fprintf fmt "Float(%f)" f
@@ -133,7 +137,10 @@ let pp_token fmt = function
   | EOF -> Format.fprintf fmt "EOF"
 
 module Type = struct
-  type t = SymbolType of { value : string } | PointerType of { base_type : t }
+  type t =
+    | SymbolType of { value : string }
+    | PointerType of { base_type : t }
+    | ArrayType of { element : t }
   [@@deriving show]
 end
 
@@ -159,6 +166,8 @@ module Expr = struct
     | NewExpr of { class_name : string }
     | MethodCall of { obj : t; method_name : string; arguments : t list }
     | AssignmentExpr of { identifier : string; value : t option }
+    | ArrayExpr of { elements : t list }
+    | IndexExpr of { array : t; index : t }
   [@@deriving show]
 end
 

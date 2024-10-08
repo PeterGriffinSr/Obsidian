@@ -19,9 +19,9 @@ fn div(int x, int y) float {
 }
 
 fn main() int {
-    char op = '*';
-    int x = 5;
-    int y = 10; 
+    char op = input("Enter op: ", char);
+    int x = input("Enter number one: ", int);
+    int y = input("Enter number two: ", int); 
 
     switch (op) {
         case '+':

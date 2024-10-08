@@ -39,7 +39,8 @@ module TypeChecker = struct
         let left_type = check_expr env left in
         let right_type = check_expr env right in
         match operator with
-        | Plus | Minus | Star | Slash | Percent | Power ->
+        | Plus | Minus | Star | Slash | Percent | Power | PlusAssign
+        | MinusAssign ->
             if left_type = right_type then left_type
             else failwith "Type mismatch in arithmetic expression"
         | Eq | Neq | Less | Greater | Leq | Geq ->
@@ -158,6 +159,26 @@ module TypeChecker = struct
            ^ ": expected " ^ Type.show var_type ^ ", got "
            ^ Type.show assigned_type)
         else var_type
+    | Expr.ArrayExpr { elements } -> (
+        match elements with
+        | [] -> failwith "TypeChecker: Cannot infer type of an empty array"
+        | first_elem :: _ ->
+            let elem_type = check_expr env first_elem in
+            List.iter
+              (fun elem ->
+                let t = check_expr env elem in
+                if t <> elem_type then
+                  failwith "TypeChecker: Type mismatch in array elements")
+              elements;
+            Type.ArrayType { element = elem_type })
+    | Expr.IndexExpr { array; index } -> (
+        let array_type = check_expr env array in
+        let index_type = check_expr env index in
+        if index_type <> Type.SymbolType { value = "int" } then
+          failwith "TypeChecker: Array index must be an integer";
+        match array_type with
+        | Type.ArrayType { element } -> element
+        | _ -> failwith "TypeChecker: Cannot index non-array type")
     | _ -> failwith "Unsupported expression"
 
   let check_enum_decl env name members =

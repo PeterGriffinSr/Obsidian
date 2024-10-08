@@ -2,7 +2,7 @@
 %left Star Slash Percent
 %left Power
 
-%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input
+%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input PlusAssign MinusAssign
 
 %token <string> Identifier
 %token <int> IntLit
@@ -53,6 +53,8 @@ type_expr:
     | Void { Ast.Type.SymbolType { value = "void" } }
     | Star type_expr { Ast.Type.PointerType { base_type = $2 } } 
     | type_expr Star { Ast.Type.PointerType { base_type = $1 } }
+    | LBracket RBracket type_expr { Ast.Type.ArrayType { element = $3 } }
+    | type_expr LBracket RBracket { Ast.Type.ArrayType { element = $1 } }
 
 expr:
     | expr Plus expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.Plus; right = $3 } }
@@ -91,6 +93,10 @@ expr:
     | Length LParen expr RParen { Ast.Expr.LengthExpr { expr = $3 } }
     | Input LParen StringLit Comma type_expr RParen { Ast.Expr.InputExpr { prompt = $3; target_type = $5 } }
     | Identifier Assign expr { Ast.Expr.AssignmentExpr { identifier = $1; value = Some $3 } }
+    | LBrace expr_list RBrace { Ast.Expr.ArrayExpr { elements = $2 } }
+    | Identifier LBracket expr RBracket { Ast.Expr.IndexExpr { array = Ast.Expr.VarExpr $1; index = $3 } }
+    | expr PlusAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.PlusAssign; right = $3 } }
+    | expr MinusAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.MinusAssign; right = $3 } }
 
 parameter:
     | type_expr Identifier { Ast.Stmt.{ name = $2; param_type = $1 } }
@@ -127,6 +133,11 @@ enum_member_list:
 
 argument_list:
     | expr Comma argument_list { $1 :: $3 }
+    | expr { [$1] }
+    | { [] }
+
+expr_list:
+    | expr Comma expr_list { $1 :: $3 }
     | expr { [$1] }
     | { [] }
 

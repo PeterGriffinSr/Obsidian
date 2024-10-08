@@ -91,6 +91,8 @@ rule token = parse
     | "**"                  { column := !column + 2; Power }
     | "||"                  { column := !column + 2; LogicalOr }
     | "&&"                  { column := !column + 2; LogicalAnd }
+    | "+="                  { column := !column + 2; PlusAssign }
+    | "-="                  { column := !column + 2; MinusAssign }
     | "=="                  { column := !column + 2; Eq }
     | "!="                  { column := !column + 2; Neq }
     | ">="                  { column := !column + 2; Geq }

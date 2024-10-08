@@ -14,10 +14,10 @@ val malloc_type : Llvm.lltype
 val malloc_func : Llvm.llvalue
 val scanf_type : Llvm.lltype
 val scanf_func : Llvm.llvalue
+val free_func : Llvm.llvalue
 val strcpy_func : Llvm.llvalue
 val strcat_func : Llvm.llvalue
 val strlen_func : Llvm.llvalue
-val free_func : Llvm.llvalue
 val concatenate_strings : Llvm.llvalue -> Llvm.llvalue -> Llvm.llvalue
 val type_size_in_bytes : Ast.Type.t -> int
 val string_of_llvm_type : Llvm.lltype -> string

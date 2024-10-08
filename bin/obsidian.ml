@@ -114,6 +114,7 @@ let () =
     close_in file_channel;
 
     remove_entry1_lines "output.ll";
+
     run_clang_commands ~output:!output_name ~save_asm:!save_asm
       ~optimization_level:!optimization_level
   with

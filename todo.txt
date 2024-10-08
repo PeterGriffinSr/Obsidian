@@ -4,5 +4,5 @@ Add Enum
 Add Class
 Add Import/Export
 Add Unsafe
-Add Arrays
-Add Recursion // Will do when I'm happy
+Add Arrays // Add to code generation
+Fix Recursion // Segfaults don't know why tho

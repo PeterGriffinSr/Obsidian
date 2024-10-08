@@ -130,6 +130,46 @@ let rec codegen_expr = function
       | Ast.LogicalOr, false, false ->
           build_or left_val right_val "ortmp" builder
       | Ast.Carot, false, false -> concatenate_strings left_val right_val
+      | Ast.PlusAssign, false, false ->
+          let var_name =
+            match left with
+            | Expr.VarExpr identifier -> identifier
+            | _ -> failwith "Left-hand side of += must be a variable"
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          let updated_value = build_add left_val right_val "addtmp" builder in
+          ignore (build_store updated_value var_alloca builder);
+          updated_value
+      | Ast.MinusAssign, false, false ->
+          let var_name =
+            match left with
+            | Expr.VarExpr identifier -> identifier
+            | _ -> failwith "Left-hand side of -= must be a variable"
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          let updated_value = build_sub left_val right_val "subtmp" builder in
+          ignore (build_store updated_value var_alloca builder);
+          updated_value
+      | Ast.PlusAssign, true, true ->
+          let var_name =
+            match left with
+            | Expr.VarExpr identifier -> identifier
+            | _ -> failwith "Left-hand side of += must be a variable"
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          let updated_value = build_fadd left_val right_val "addtmp" builder in
+          ignore (build_store updated_value var_alloca builder);
+          updated_value
+      | Ast.MinusAssign, true, true ->
+          let var_name =
+            match left with
+            | Expr.VarExpr identifier -> identifier
+            | _ -> failwith "Left-hand side of -= must be a variable"
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          let updated_value = build_fsub left_val right_val "subtmp" builder in
+          ignore (build_store updated_value var_alloca builder);
+          updated_value
       | _ -> failwith "Mixed or unsupported operand types for binary operation")
   | Expr.SizeofExpr { type_expr } ->
       let size_in_bytes = type_size_in_bytes type_expr in

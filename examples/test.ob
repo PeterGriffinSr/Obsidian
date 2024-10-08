@@ -15,6 +15,18 @@ fn main() int {
     // println(x); // print 5
     // x = 6;
     // println(x); // print 6
-    println("Hello, " ^ "world");
+    // println("Hello, " ^ "world");
+    // int x = 10;
+    // int y = 5;
+ 
+    // x += y;
+    // println(x);
+ 
+    // x -= 3;
+    // println(x);
+
+    // float z = 7.5;
+    // z += 2.5;
+    // println(z);
     return 0;
 }

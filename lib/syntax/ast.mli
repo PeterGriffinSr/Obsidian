@@ -56,6 +56,8 @@ type token =
   | Cast
   | This
   | Println
+  | MinusAssign
+  | PlusAssign
   | Identifier of string
   | Int of int
   | Float of float
@@ -68,7 +70,10 @@ type token =
 val pp_token : Format.formatter -> token -> unit
 
 module Type : sig
-  type t = SymbolType of { value : string } | PointerType of { base_type : t }
+  type t =
+    | SymbolType of { value : string }
+    | PointerType of { base_type : t }
+    | ArrayType of { element : t }
 
   val pp :
     Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
@@ -98,6 +103,8 @@ module Expr : sig
     | NewExpr of { class_name : string }
     | MethodCall of { obj : t; method_name : string; arguments : t list }
     | AssignmentExpr of { identifier : string; value : t option }
+    | ArrayExpr of { elements : t list }
+    | IndexExpr of { array : t; index : t }
 
   val pp :
     Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
