@@ -13,6 +13,6 @@ fn main() int {
     // int a = 10 % 2;
     // int e = (10 % 2 == 0) ? 1 : 0;
     // println(e);
-    println(5 + -1);
+    // println(5 + -1);
     return 0;
 }

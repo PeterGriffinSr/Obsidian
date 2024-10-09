@@ -1,0 +1,107 @@
+//! Sample trigonometry libary made by TheDevConnor
+//! Github: https://github.com/TheDevConnor
+//! License: BSD 3-Clause
+
+fn factorial(int n) float {
+    float res = 1.0;
+    for (int i = 2; i <= n; i++) {
+        res *= cast(i, float);
+    }
+    return res;
+}
+
+fn pow(float x, int n) float {
+    float res = 1.0;
+    for (int i = 0; i < n; i++) {
+        res *= x;
+    }
+    return res;
+}
+
+fn sin(float x, int terms) float {
+    float sin = 0.0;
+    for (int n = 0; n < terms; n++) {
+        int mod = n % 2;
+        int sign = (mod == 0) ? 1 : -1; 
+
+        int exp = 2 * n + 1;
+        sin +=  cast(sign, float) * pow(x, exp) / factorial(exp);
+    }
+    return sin;
+}
+
+fn csc(float x, int terms) float {
+    return 1.0 / sin(x, terms);
+}
+
+fn arcsin(float x, int terms) float {
+    // TODO: Fix this because of codegen error
+    // Error: Mixed or unsupported operand types for binary operation
+    // Error: TypeChecker: Type mismatch in logical expression
+    // if (x < -1.0 || x > 1.0) {
+    //     println("Error: arcsin(x) is undefined for x < -1");
+    // }
+    float arsin = 0.0;
+    for (int n = 0; n < terms; n++) {
+        int exp = 2 * n + 1;
+        float lhs = factorial(2 * n) * pow(x, exp);
+        float rhs = pow(4.0, n) * pow(factorial(n), 2) * cast(exp, float);
+        arsin += lhs / rhs;
+    }
+    return arsin;
+}
+
+fn cos(float x, int terms) float {
+    float cos = 0.0;
+    for (int n = 0; n < terms; n++) {
+        // TODO: Fix this so that we can do (n % 2 == 0) ? 1 : -1
+        int mod = n % 2;
+        int sign = (mod == 0) ? 1 : -1; 
+
+        int exp = 2 * n;
+        cos +=  cast(sign, float) * pow(x, exp) / factorial(exp);
+    }
+    return cos;
+}
+
+fn sec(float x, int terms) float {
+    return 1.0 / cos(x, terms);
+}
+
+fn arccos(float x, int terms) float {
+    float PI = 3.14159265358979323846;
+    return PI / 2.0 - arcsin(x, terms);
+}
+
+fn tan(float x, int terms) float {
+    return sin(x, terms) / cos(x, terms);
+}
+
+fn cot(float x, int terms) float {
+    return cos(x, terms) / sin(x, terms);
+}
+
+fn arctan(float x, int terms) float {
+    float arctan = 0.0;
+    for (int n = 0; n < terms; n++) {
+        int exp = 2 * n + 1;
+        arctan += pow(-1.0, n) * pow(x, exp) / cast(exp, float);
+    }
+    return arctan;
+}
+
+fn degToRad(float deg) float {
+    float PI = 3.14159265358979323846;
+    return deg * PI / 180.0;
+}
+
+fn radToDeg(float rad) float {
+    float PI = 3.14159265358979323846;
+    return rad * 180.0 / PI;
+}
+
+fn main() int {
+    println(degToRad(180.0)); // 3.1415927
+    println(radToDeg(3.1415927)); // 180.0
+    return 0;
+}
