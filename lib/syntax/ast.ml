@@ -60,6 +60,10 @@ type token =
   | PlusAssign
   | StarAssign
   | SlashAssign
+  | Pipe
+  | Leftshift
+  | Rightshift
+  | Xor
   | Identifier of string
   | Int of int
   | Float of float
@@ -131,6 +135,10 @@ let pp_token fmt = function
   | PlusAssign -> Format.fprintf fmt "PlusAssign"
   | StarAssign -> Format.fprintf fmt "StarAssign"
   | SlashAssign -> Format.fprintf fmt "SlashAssign"
+  | Pipe -> Format.fprintf fmt "Pipe"
+  | Leftshift -> Format.fprintf fmt "Leftshift"
+  | Rightshift -> Format.fprintf fmt "Rightshift"
+  | Xor -> Format.fprintf fmt "Xor"
   | Identifier s -> Format.fprintf fmt "Identifier(%s)" s
   | Int i -> Format.fprintf fmt "Int(%d)" i
   | Float f -> Format.fprintf fmt "Float(%f)" f

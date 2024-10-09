@@ -1,45 +1,13 @@
-// fn greet(string name) void {
-//     println("Hello, " ^ name);
-// }
-
-// fn fib(int n) int {
-//     if (n <= 1) {
-//         return 1;
-//     }
-
-//     return fib(n - 1) + fib(n - 2);
-// }
-
 fn main() int {
-    // int x = 5;
-    // println(x); // print 5
-    // x = 6;
-    // println(x); // print 6
-    // println("Hello, " ^ "world");
-    // int y = 5;
- 
-    // x += y;
+    // int a = 100;
+    // string x = (a > 10) ? "true" : "false";
     // println(x);
- 
-    // x = x + y;
-    // println(x);
-
-    // x -= 3;
-    // println(x);
-
-    // float z = 7.5;
-    // z += 2.5;
-    // println(z);
-
-    int a = 15;
-  
-    // if (a > 10) {
-    //     println("true");
-    // } else {
-    //     println("false");
-    // }
-  
-    string x = (a > 10) ? "true" : "false";
-    println(x);
+    // println(10 % 3);
+    // println(10.5 % 2.5);
+    println(25 & 5);
+    println(25 | 5);
+    println(25 ^^ 5);
+    println(25 >> 5);
+    println(25 << 5);
     return 0;
 }

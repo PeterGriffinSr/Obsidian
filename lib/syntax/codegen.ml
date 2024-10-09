@@ -170,6 +170,16 @@ let rec codegen_expr = function
           let updated_value = build_sdiv left_val right_val "divtmp" builder in
           ignore (build_store updated_value var_alloca builder);
           updated_value
+      | Ast.Percent, false, false ->
+          build_srem left_val right_val "modtmp" builder
+      | Ast.Pipe, false, false -> build_or left_val right_val "bortmp" builder
+      | Ast.Leftshift, false, false ->
+          build_shl left_val right_val "shltmp" builder
+      | Ast.Rightshift, false, false ->
+          build_lshr left_val right_val "lshrtmp" builder
+      | Ast.Xor, false, false -> build_xor left_val right_val "xortmp" builder
+      | Ast.Ampersand, false, false ->
+        build_and left_val right_val "bandtmp" builder
       | Ast.PlusAssign, true, true ->
           let var_name =
             match left with
@@ -210,6 +220,19 @@ let rec codegen_expr = function
           let updated_value = build_fdiv left_val right_val "fdivtmp" builder in
           ignore (build_store updated_value var_alloca builder);
           updated_value
+      | Ast.Power, true, true ->
+          let pow_func =
+            match lookup_function "llvm.pow.f64" the_module with
+            | Some func -> func
+            | None ->
+                let pow_type =
+                  function_type f64_type [| f64_type; f64_type |]
+                in
+                declare_function "llvm.pow.f64" pow_type the_module
+          in
+          build_call pow_func [| left_val; right_val |] "powtmp" builder
+      | Ast.Percent, true, true ->
+          build_frem left_val right_val "fmodtmp" builder
       | _ -> failwith "Mixed or unsupported operand types for binary operation")
   | Expr.SizeofExpr { type_expr } ->
       let size_in_bytes = type_size_in_bytes type_expr in
@@ -349,31 +372,33 @@ let rec codegen_expr = function
       with Not_found -> failwith ("Unknown variable: " ^ identifier))
   | Expr.TernaryExpr { cond; onTrue; onFalse } ->
       let cond_val = codegen_expr cond in
-
       let zero = const_int i1_type 0 in
       let cond_bool = build_icmp Icmp.Ne cond_val zero "ifcond" builder in
 
-      let start_bb = insertion_block builder in
-      let the_function = block_parent start_bb in
+      let current_bb = insertion_block builder in
+      let the_function = block_parent current_bb in
+
       let then_bb = append_block context "then" the_function in
       let else_bb = append_block context "else" the_function in
       let merge_bb = append_block context "ifcont" the_function in
+      let result_alloca =
+        build_alloca (type_of (codegen_expr onTrue)) "result" builder
+      in
+
       ignore (build_cond_br cond_bool then_bb else_bb builder);
+
       position_at_end then_bb builder;
-
       let then_val = codegen_expr onTrue in
+      ignore (build_store then_val result_alloca builder);
       ignore (build_br merge_bb builder);
+
       position_at_end else_bb builder;
-
       let else_val = codegen_expr onFalse in
+      ignore (build_store else_val result_alloca builder);
       ignore (build_br merge_bb builder);
-      position_at_end merge_bb builder;
 
-      let result = build_alloca (type_of then_val) "result" builder in
-      ignore (build_cond_br cond_bool then_bb else_bb builder);
-      ignore (build_store then_val result builder);
-      ignore (build_store else_val result builder);
-      build_load result "iftmp" builder
+      position_at_end merge_bb builder;
+      build_load result_alloca "iftmp" builder
   | _ -> failwith "Expression not implemented"
 
 let rec codegen_stmt = function

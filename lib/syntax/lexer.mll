@@ -87,6 +87,7 @@ rule token = parse
     | "%"                   { token_and_update_column Percent lexbuf }
     | "="                   { token_and_update_column Assign lexbuf }
     | "&"                   { token_and_update_column Ampersand lexbuf }
+    | "|"                   {token_and_update_column Pipe lexbuf }
     | "?"                   { token_and_update_column Question lexbuf }
 
     | "**"                  { column := !column + 2; Power }
@@ -102,6 +103,9 @@ rule token = parse
     | "<="                  { column := !column + 2; Leq }
     | "--"                  { column := !column + 2; Dec }
     | "++"                  { column := !column + 2; Inc }
+    | "^^"                  { column := !column + 2; Xor }
+    | "<<"                  { column := !column + 2; Leftshift }
+    | ">>"                  { column := !column + 2; Rightshift }
 
     | Identifier            { let lexeme = Lexing.lexeme lexbuf in column := !column + String.length lexeme; Identifier lexeme }
     | Floats                { let lexeme = Lexing.lexeme lexbuf in column := !column + String.length lexeme; FloatLit (float_of_string lexeme) }

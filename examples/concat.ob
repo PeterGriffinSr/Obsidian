@@ -1,0 +1,9 @@
+fn greet(string name) string {
+    return name;
+}
+
+fn main() int {
+    string name = greet("Azlo");
+    println("Hello, " ^ name);
+    return 0;
+}

@@ -40,7 +40,8 @@ module TypeChecker = struct
         let right_type = check_expr env right in
         match operator with
         | Plus | Minus | Star | Slash | Percent | Power | PlusAssign
-        | MinusAssign | StarAssign | SlashAssign ->
+        | MinusAssign | StarAssign | SlashAssign | Ampersand | Pipe | Rightshift
+        | Leftshift | Xor ->
             if left_type = right_type then left_type
             else failwith "Type mismatch in arithmetic expression"
         | Eq | Neq | Less | Greater | Leq | Geq ->

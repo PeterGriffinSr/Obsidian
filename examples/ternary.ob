@@ -1,0 +1,6 @@
+fn main() int {
+    int age = input("Enter age: ", int);
+    string res = (age >= 18) ? "18 or older" : "17 or younger";
+    println(res);
+    return 0;
+}

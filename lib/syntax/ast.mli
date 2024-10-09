@@ -60,6 +60,10 @@ type token =
   | PlusAssign
   | StarAssign
   | SlashAssign
+  | Pipe
+  | Leftshift
+  | Rightshift
+  | Xor
   | Identifier of string
   | Int of int
   | Float of float
@@ -77,8 +81,10 @@ module Type : sig
     | PointerType of { base_type : t }
     | ArrayType of { element : t }
 
-  val pp : Format.formatter -> t -> unit
-  val show : t -> string
+  val pp :
+    Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
+
+  val show : t -> Ppx_deriving_runtime.string
 end
 
 module Expr : sig
@@ -107,15 +113,21 @@ module Expr : sig
     | ArrayExpr of { elements : t list }
     | IndexExpr of { array : t; index : t }
 
-  val pp : Format.formatter -> t -> unit
-  val show : t -> string
+  val pp :
+    Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
+
+  val show : t -> Ppx_deriving_runtime.string
 end
 
 module Stmt : sig
   type parameter = { name : string; param_type : Type.t }
 
-  val pp_parameter : Format.formatter -> parameter -> unit
-  val show_parameter : parameter -> string
+  val pp_parameter :
+    Ppx_deriving_runtime.Format.formatter ->
+    parameter ->
+    Ppx_deriving_runtime.unit
+
+  val show_parameter : parameter -> Ppx_deriving_runtime.string
 
   type t =
     | BlockStmt of { body : t list }
@@ -152,6 +164,8 @@ module Stmt : sig
     | ReturnStmt of Expr.t
     | BreakStmt
 
-  val pp : Format.formatter -> t -> unit
-  val show : t -> string
+  val pp :
+    Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
+
+  val show : t -> Ppx_deriving_runtime.string
 end

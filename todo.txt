@@ -1,9 +1,21 @@
+Need to impl.
+--------
 Add Alloc
 Add Dealloc
 Add Enum
 Add Class
 Add Import/Export
 Add Unsafe
-Add Arrays // Add to code generation
+Add Array Slicing
+--------
+
+Need to add to code gen
+--------
+Add Arrays
+--------
+
+Need to fix
+--------
 Fix Recursion // Segfaults don't know why tho
-Fix Ternary // Inf loops -> has something todo with creating ifcont
+Fix that 12 byte memory leak for concat 
+--------

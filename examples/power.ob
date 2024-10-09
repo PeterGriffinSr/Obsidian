@@ -1,0 +1,9 @@
+fn i64_power(float x, float y) int {
+    return cast(x ** y, int);
+}
+
+fn main() int {
+    int x = i64_power(5.0, 5.0);
+    println(x);
+    return 0;
+}

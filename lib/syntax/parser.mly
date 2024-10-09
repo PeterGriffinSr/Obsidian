@@ -2,7 +2,7 @@
 %left Star Slash Percent
 %left Power
 
-%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input PlusAssign MinusAssign StarAssign SlashAssign Question
+%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input PlusAssign MinusAssign StarAssign SlashAssign Pipe Leftshift Rightshift Xor Question
 
 %token <string> Identifier
 %token <int> IntLit
@@ -72,6 +72,11 @@ expr:
     | expr Geq expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.Geq; right = $3 } }
     | expr Leq expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.Leq; right = $3 } }
     | expr Carot expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.Carot; right = $3 } }
+    | expr Ampersand expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.Ampersand; right = $3 } }
+    | expr Pipe expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.Pipe; right = $3 } }
+    | expr Xor expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.Xor; right = $3 } }
+    | expr Leftshift expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.Leftshift; right = $3 } }
+    | expr Rightshift expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.Rightshift; right = $3 } }
     | New Identifier LParen RParen { Ast.Expr.NewExpr { class_name = $2 } }
     | Identifier LParen argument_list RParen { Ast.Expr.CallExpr { callee = Ast.Expr.VarExpr $1; arguments = $3 } }
     | expr Dot Identifier LParen argument_list RParen { Ast.Expr.MethodCall { obj = $1; method_name = $3; arguments = $5 } }
