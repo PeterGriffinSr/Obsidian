@@ -83,6 +83,8 @@ expr:
     | Not expr { Ast.Expr.UnaryExpr { operator = Ast.Not; operand = $2 } }
     | expr Inc { Ast.Expr.UnaryExpr { operator = Ast.Inc; operand = $1 } }
     | expr Dec { Ast.Expr.UnaryExpr { operator = Ast.Dec; operand = $1 } }
+    | Minus IntLit { Ast.Expr.IntExpr { value = -$2 } }
+    | Minus FloatLit { Ast.Expr.FloatExpr { value = -. $2 } }
     | IntLit { Ast.Expr.IntExpr { value = $1 } }
     | FloatLit { Ast.Expr.FloatExpr { value = $1 } }
     | StringLit { Ast.Expr.StringExpr { value = $1 } }
