@@ -40,7 +40,7 @@ module TypeChecker = struct
         let right_type = check_expr env right in
         match operator with
         | Plus | Minus | Star | Slash | Percent | Power | PlusAssign
-        | MinusAssign ->
+        | MinusAssign | StarAssign | SlashAssign ->
             if left_type = right_type then left_type
             else failwith "Type mismatch in arithmetic expression"
         | Eq | Neq | Less | Greater | Leq | Geq ->
@@ -179,6 +179,19 @@ module TypeChecker = struct
         match array_type with
         | Type.ArrayType { element } -> element
         | _ -> failwith "TypeChecker: Cannot index non-array type")
+    | Expr.TernaryExpr { cond; onTrue; onFalse } ->
+        let cond_type = check_expr env cond in
+        if cond_type <> Type.SymbolType { value = "bool" } then
+          failwith
+            "TypeChecker: Condition in ternary expression must be a boolean";
+        let true_type = check_expr env onTrue in
+        let false_type = check_expr env onFalse in
+        if true_type = false_type then true_type
+        else
+          failwith
+            ("TypeChecker: Type mismatch in ternary expression: "
+           ^ "onTrue is of type " ^ Type.show true_type
+           ^ " while onFalse is of type " ^ Type.show false_type)
     | _ -> failwith "Unsupported expression"
 
   let check_enum_decl env name members =

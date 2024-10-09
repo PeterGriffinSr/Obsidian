@@ -87,12 +87,15 @@ rule token = parse
     | "%"                   { token_and_update_column Percent lexbuf }
     | "="                   { token_and_update_column Assign lexbuf }
     | "&"                   { token_and_update_column Ampersand lexbuf }
+    | "?"                   { token_and_update_column Question lexbuf }
 
     | "**"                  { column := !column + 2; Power }
     | "||"                  { column := !column + 2; LogicalOr }
     | "&&"                  { column := !column + 2; LogicalAnd }
     | "+="                  { column := !column + 2; PlusAssign }
     | "-="                  { column := !column + 2; MinusAssign }
+    | "*="                  { column := !column + 2; StarAssign }
+    | "/="                  { column := !column + 2; SlashAssign }
     | "=="                  { column := !column + 2; Eq }
     | "!="                  { column := !column + 2; Neq }
     | ">="                  { column := !column + 2; Geq }

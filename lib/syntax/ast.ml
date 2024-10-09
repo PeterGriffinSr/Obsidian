@@ -58,6 +58,8 @@ type token =
   | Println
   | MinusAssign
   | PlusAssign
+  | StarAssign
+  | SlashAssign
   | Identifier of string
   | Int of int
   | Float of float
@@ -127,6 +129,8 @@ let pp_token fmt = function
   | Println -> Format.fprintf fmt "Println"
   | MinusAssign -> Format.fprintf fmt "MinusAssign"
   | PlusAssign -> Format.fprintf fmt "PlusAssign"
+  | StarAssign -> Format.fprintf fmt "StarAssign"
+  | SlashAssign -> Format.fprintf fmt "SlashAssign"
   | Identifier s -> Format.fprintf fmt "Identifier(%s)" s
   | Int i -> Format.fprintf fmt "Int(%d)" i
   | Float f -> Format.fprintf fmt "Float(%f)" f
@@ -153,6 +157,7 @@ module Expr = struct
     | BoolExpr of { value : bool }
     | VarExpr of string
     | BinaryExpr of { left : t; operator : token; right : t }
+    | TernaryExpr of { cond : t; onTrue : t; onFalse : t }
     | UnaryExpr of { operator : token; operand : t }
     | CallExpr of { callee : t; arguments : t list }
     | AllocExpr of { size : t }

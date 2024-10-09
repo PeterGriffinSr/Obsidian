@@ -2,7 +2,7 @@
 %left Star Slash Percent
 %left Power
 
-%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input PlusAssign MinusAssign
+%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input PlusAssign MinusAssign StarAssign SlashAssign Question
 
 %token <string> Identifier
 %token <int> IntLit
@@ -97,6 +97,9 @@ expr:
     | Identifier LBracket expr RBracket { Ast.Expr.IndexExpr { array = Ast.Expr.VarExpr $1; index = $3 } }
     | expr PlusAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.PlusAssign; right = $3 } }
     | expr MinusAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.MinusAssign; right = $3 } }
+    | expr StarAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.StarAssign; right = $3 } }
+    | expr SlashAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.SlashAssign; right = $3 } }
+    | LParen expr RParen Question expr Colon expr { Ast.Expr.TernaryExpr { cond = $2; onTrue = $5; onFalse = $7; } }
 
 parameter:
     | type_expr Identifier { Ast.Stmt.{ name = $2; param_type = $1 } }

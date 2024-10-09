@@ -150,6 +150,26 @@ let rec codegen_expr = function
           let updated_value = build_sub left_val right_val "subtmp" builder in
           ignore (build_store updated_value var_alloca builder);
           updated_value
+      | Ast.StarAssign, false, false ->
+          let var_name =
+            match left with
+            | Expr.VarExpr identifier -> identifier
+            | _ -> failwith "Left-hand side of *= must be a variable"
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          let updated_value = build_mul left_val right_val "multmp" builder in
+          ignore (build_store updated_value var_alloca builder);
+          updated_value
+      | Ast.SlashAssign, false, false ->
+          let var_name =
+            match left with
+            | Expr.VarExpr identifier -> identifier
+            | _ -> failwith "Left-hand side of /= must be a variable"
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          let updated_value = build_sdiv left_val right_val "divtmp" builder in
+          ignore (build_store updated_value var_alloca builder);
+          updated_value
       | Ast.PlusAssign, true, true ->
           let var_name =
             match left with
@@ -157,7 +177,7 @@ let rec codegen_expr = function
             | _ -> failwith "Left-hand side of += must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
-          let updated_value = build_fadd left_val right_val "addtmp" builder in
+          let updated_value = build_fadd left_val right_val "faddtmp" builder in
           ignore (build_store updated_value var_alloca builder);
           updated_value
       | Ast.MinusAssign, true, true ->
@@ -167,7 +187,27 @@ let rec codegen_expr = function
             | _ -> failwith "Left-hand side of -= must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
-          let updated_value = build_fsub left_val right_val "subtmp" builder in
+          let updated_value = build_fsub left_val right_val "fsubtmp" builder in
+          ignore (build_store updated_value var_alloca builder);
+          updated_value
+      | Ast.StarAssign, true, true ->
+          let var_name =
+            match left with
+            | Expr.VarExpr identifier -> identifier
+            | _ -> failwith "Left-hand side of *= must be a variable"
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          let updated_value = build_fmul left_val right_val "fmultmp" builder in
+          ignore (build_store updated_value var_alloca builder);
+          updated_value
+      | Ast.SlashAssign, true, true ->
+          let var_name =
+            match left with
+            | Expr.VarExpr identifier -> identifier
+            | _ -> failwith "Left-hand side of /= must be a variable"
+          in
+          let var_alloca = Hashtbl.find variables var_name in
+          let updated_value = build_fdiv left_val right_val "fdivtmp" builder in
           ignore (build_store updated_value var_alloca builder);
           updated_value
       | _ -> failwith "Mixed or unsupported operand types for binary operation")
@@ -307,6 +347,33 @@ let rec codegen_expr = function
         ignore (build_store new_value var_alloca builder);
         new_value
       with Not_found -> failwith ("Unknown variable: " ^ identifier))
+  | Expr.TernaryExpr { cond; onTrue; onFalse } ->
+      let cond_val = codegen_expr cond in
+
+      let zero = const_int i1_type 0 in
+      let cond_bool = build_icmp Icmp.Ne cond_val zero "ifcond" builder in
+
+      let start_bb = insertion_block builder in
+      let the_function = block_parent start_bb in
+      let then_bb = append_block context "then" the_function in
+      let else_bb = append_block context "else" the_function in
+      let merge_bb = append_block context "ifcont" the_function in
+      ignore (build_cond_br cond_bool then_bb else_bb builder);
+      position_at_end then_bb builder;
+
+      let then_val = codegen_expr onTrue in
+      ignore (build_br merge_bb builder);
+      position_at_end else_bb builder;
+
+      let else_val = codegen_expr onFalse in
+      ignore (build_br merge_bb builder);
+      position_at_end merge_bb builder;
+
+      let result = build_alloca (type_of then_val) "result" builder in
+      ignore (build_cond_br cond_bool then_bb else_bb builder);
+      ignore (build_store then_val result builder);
+      ignore (build_store else_val result builder);
+      build_load result "iftmp" builder
   | _ -> failwith "Expression not implemented"
 
 let rec codegen_stmt = function

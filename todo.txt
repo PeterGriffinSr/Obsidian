@@ -6,3 +6,4 @@ Add Import/Export
 Add Unsafe
 Add Arrays // Add to code generation
 Fix Recursion // Segfaults don't know why tho
+Fix Ternary // Inf loops -> has something todo with creating ifcont
