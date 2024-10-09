@@ -41,7 +41,7 @@ let remove_entry1_lines filename =
 let run_clang_commands ~output ~save_asm ~optimization_level =
   if save_asm then (
     let clang_s_command =
-      Printf.sprintf "clang -S output.ll -O%s -Wno-override-module -lm"
+      Printf.sprintf "clang -S output.ll -O%s -Wno-override-module"
         optimization_level
     in
     if Sys.command clang_s_command <> 0 then

@@ -25,7 +25,7 @@ fn sin(float x, int terms) float {
         int sign = (mod == 0) ? 1 : -1; 
 
         int exp = 2 * n + 1;
-        sin +=  cast(sign, float) * pow(x, exp) / factorial(exp);
+        sin += cast(sign, float) * pow(x, exp) / factorial(exp);
     }
     return sin;
 }
@@ -59,7 +59,7 @@ fn cos(float x, int terms) float {
         int sign = (mod == 0) ? 1 : -1; 
 
         int exp = 2 * n;
-        cos +=  cast(sign, float) * pow(x, exp) / factorial(exp);
+        cos += cast(sign, float) * pow(x, exp) / factorial(exp);
     }
     return cos;
 }
