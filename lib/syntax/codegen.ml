@@ -179,7 +179,7 @@ let rec codegen_expr = function
           build_lshr left_val right_val "lshrtmp" builder
       | Ast.Xor, false, false -> build_xor left_val right_val "xortmp" builder
       | Ast.Ampersand, false, false ->
-        build_and left_val right_val "bandtmp" builder
+          build_and left_val right_val "bandtmp" builder
       | Ast.PlusAssign, true, true ->
           let var_name =
             match left with

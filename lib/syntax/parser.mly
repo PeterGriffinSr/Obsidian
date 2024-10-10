@@ -91,6 +91,7 @@ expr:
     | CharLit { Ast.Expr.CharExpr { value = $1 } }
     | BoolLit { Ast.Expr.BoolExpr { value = $1 } }
     | Identifier { Ast.Expr.VarExpr $1 }
+    | LParen expr RParen { $2 }
     | Alloc LParen expr RParen { Ast.Expr.AllocExpr { size = $3 } }
     | Dealloc LParen expr RParen { Ast.Expr.DeallocExpr { pointer = $3 } }
     | Sizeof LParen type_expr RParen { Ast.Expr.SizeofExpr { type_expr = $3 } }
