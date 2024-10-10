@@ -45,7 +45,14 @@ module TypeChecker = struct
             if left_type = right_type then left_type
             else failwith "Type mismatch in arithmetic expression"
         | Eq | Neq | Less | Greater | Leq | Geq ->
-            if left_type = right_type then Type.SymbolType { value = "bool" }
+            if
+              (left_type = Type.SymbolType { value = "bool" }
+              || left_type = Type.SymbolType { value = "int" }
+              || left_type = Type.SymbolType { value = "float" })
+              && (left_type = Type.SymbolType { value = "bool" }
+                 || right_type = Type.SymbolType { value = "int" }
+                 || left_type = Type.SymbolType { value = "float" })
+            then Ast.Type.SymbolType { value = "bool" }
             else failwith "Type mismatch in comparison expression"
         | Carot ->
             if
@@ -59,9 +66,11 @@ module TypeChecker = struct
         | LogicalAnd | LogicalOr ->
             if
               (left_type = Type.SymbolType { value = "bool" }
-              || left_type = Type.SymbolType { value = "int" })
+              || left_type = Type.SymbolType { value = "int" }
+              || left_type = Type.SymbolType { value = "float" })
               && (left_type = Type.SymbolType { value = "bool" }
-                 || right_type = Type.SymbolType { value = "int" })
+                 || right_type = Type.SymbolType { value = "int" }
+                 || left_type = Type.SymbolType { value = "float" })
             then Ast.Type.SymbolType { value = "bool" }
             else failwith "TypeChecker: Type mismatch in logical expression"
         | _ -> failwith "Unsupported operator in binary expression")
@@ -102,6 +111,14 @@ module TypeChecker = struct
             else
               failwith
                 "TypeChecker: Operand of INC/DEC must be an integer or float"
+        | Ast.Minus ->
+            if
+              operand_type = Ast.Type.SymbolType { value = "int" }
+              || operand_type = Ast.Type.SymbolType { value = "float" }
+            then operand_type
+            else
+              failwith
+                "TypeChecker: Operand of MINUS must be an integer or float"
         | _ -> failwith "TypeChecker: Unsupported unary operator")
     | Expr.PrintlnExpr { expr } ->
         let _ = check_expr env expr in

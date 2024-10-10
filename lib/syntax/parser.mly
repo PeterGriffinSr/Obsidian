@@ -85,6 +85,7 @@ expr:
     | expr Dec { Ast.Expr.UnaryExpr { operator = Ast.Dec; operand = $1 } }
     | Minus IntLit { Ast.Expr.IntExpr { value = -$2 } }
     | Minus FloatLit { Ast.Expr.FloatExpr { value = -. $2 } }
+    | Minus Identifier { Ast.Expr.UnaryExpr { operator = Ast.Minus; operand = Ast.Expr.VarExpr $2 } }
     | IntLit { Ast.Expr.IntExpr { value = $1 } }
     | FloatLit { Ast.Expr.FloatExpr { value = $1 } }
     | StringLit { Ast.Expr.StringExpr { value = $1 } }

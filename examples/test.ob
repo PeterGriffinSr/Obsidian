@@ -10,14 +10,14 @@ fn main() int {
     // println(25 >> 5);
     // println(25 << 5);
     // int n = 10;
-    // int a = 10 % 2;
-    // int e = (a == 0) ? 1 : 0;
+    // string e = ((10 / 2) == 0) ? "true" : "false";
     // println(e);
-    // println(5 + -1);
+    // int x = 5;
+    // println(-x + 1);
     // []int x = {1, 2, 3};
     // println(5 + 5);
     // println(x[0]); // print 1
-    float x =  (1.0 / 3.0) * (5.0 + 5.0) / 2.0;
-    println(x);
+    // float x =  (1.0 / 3.0) * (5.0 + 5.0) / 2.0;
+    // println(x);
     return 0;
 }

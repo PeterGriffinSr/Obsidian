@@ -18,14 +18,25 @@ fn pow(float x, int n) float {
     return res;
 }
 
+fn abs(float x) float {
+    return (x <= 0.0) ? -x : x;
+}
+
+fn degToRad(float deg) float {
+    float PI = 3.14159265358979323846;
+    return deg * PI / 180.0;
+}
+
+fn radToDeg(float rad) float {
+    float PI = 3.14159265358979323846;
+    return rad * 180.0 / PI;
+}
+
 fn sin(float x, int terms) float {
     float sin = 0.0;
     for (int n = 0; n < terms; n++) {
-        int mod = n % 2;
-        int sign = (mod == 0) ? 1 : -1; 
-
-        int exp = 2 * n + 1;
-        sin += cast(sign, float) * pow(x, exp) / factorial(exp);
+        int sign = ((n % 2) == 0) ? 1 : -1; 
+        sin += cast(sign, float) * pow(x, 2 * n + 1) / factorial(2 * n + 1);
     }
     return sin;
 }
@@ -37,16 +48,16 @@ fn csc(float x, int terms) float {
 fn arcsin(float x, int terms) float {
     // TODO: Fix this because of codegen error
     // Error: Mixed or unsupported operand types for binary operation
-    // Error: TypeChecker: Type mismatch in logical expression
-    // if (x < -1.0 || x > 1.0) {
-    //     println("Error: arcsin(x) is undefined for x < -1");
-    // }
+    if (x < -1.0) {
+        println("Error: arcsin(x) is undefined for x < -1");
+    }
+    if (x > 1.0) {
+        println("Error: arcsin(x) is undefined for x < -1");
+    }
     float arsin = 0.0;
     for (int n = 0; n < terms; n++) {
         int exp = 2 * n + 1;
-        float lhs = factorial(2 * n) * pow(x, exp);
-        float rhs = pow(4.0, n) * pow(factorial(n), 2) * cast(exp, float);
-        arsin += lhs / rhs;
+        arsin += (factorial(2 * n) * pow(x, exp)) / (pow(4.0, n) * pow(factorial(n), 2) * cast(exp, float));
     }
     return arsin;
 }
@@ -54,12 +65,8 @@ fn arcsin(float x, int terms) float {
 fn cos(float x, int terms) float {
     float cos = 0.0;
     for (int n = 0; n < terms; n++) {
-        // TODO: Fix this so that we can do (n % 2 == 0) ? 1 : -1
-        int mod = n % 2;
-        int sign = (mod == 0) ? 1 : -1; 
-
-        int exp = 2 * n;
-        cos += cast(sign, float) * pow(x, exp) / factorial(exp);
+        int sign = ((n % 2) == 0) ? 1 : -1; 
+        cos += cast(sign, float) * pow(x, 2 * n) / factorial(2 * n);
     }
     return cos;
 }
@@ -84,24 +91,30 @@ fn cot(float x, int terms) float {
 fn arctan(float x, int terms) float {
     float arctan = 0.0;
     for (int n = 0; n < terms; n++) {
-        int exp = 2 * n + 1;
-        arctan += pow(-1.0, n) * pow(x, exp) / cast(exp, float);
+        arctan += pow(-1.0, 2 * n + 1) * pow(x, 2 * n + 1) / cast(2 * n + 1, float);
     }
     return arctan;
 }
 
-fn degToRad(float deg) float {
+fn wrapAngle(float angle) float {
     float PI = 3.14159265358979323846;
-    return deg * PI / 180.0;
+    return angle % (2.0 * PI);
 }
 
-fn radToDeg(float rad) float {
+fn normalizeAngle(float angle) float {
+    float x = angle;
     float PI = 3.14159265358979323846;
-    return rad * 180.0 / PI;
+    while (x < -PI) {
+        x += 2.0 * PI;
+    }
+    while (x > PI) {
+        x -= 2.0 * PI;
+    }
+    return x;
 }
 
 fn main() int {
-    println(degToRad(180.0)); // 3.1415927
-    println(radToDeg(3.1415927)); // 180.0
+    println(normalizeAngle(4.0));
+    println(sin(0.5, 10)); // 0.4794255386041834
     return 0;
 }

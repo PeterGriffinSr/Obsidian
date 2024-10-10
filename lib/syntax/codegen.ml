@@ -233,6 +233,21 @@ let rec codegen_expr = function
           build_call pow_func [| left_val; right_val |] "powtmp" builder
       | Ast.Percent, true, true ->
           build_frem left_val right_val "fmodtmp" builder
+      | Ast.Eq, true, true ->
+          build_fcmp Fcmp.Oeq left_val right_val "feqtmp" builder
+      | Ast.Neq, true, true ->
+          build_fcmp Fcmp.One left_val right_val "fneqtmp" builder
+      | Ast.Leq, true, true ->
+          build_fcmp Fcmp.Ole left_val right_val "fleqtmp" builder
+      | Ast.Geq, true, true ->
+          build_fcmp Fcmp.Oge left_val right_val "fgeqtmp" builder
+      | Ast.Less, true, true ->
+          build_fcmp Fcmp.Olt left_val right_val "fletmp" builder
+      | Ast.Greater, true, true ->
+          build_fcmp Fcmp.Ogt left_val right_val "fgetmp" builder
+      | Ast.LogicalAnd, true, true ->
+          build_and left_val right_val "andtmp" builder
+      | Ast.LogicalOr, true, true -> build_or left_val right_val "ortmp" builder
       | _ -> failwith "Mixed or unsupported operand types for binary operation")
   | Expr.SizeofExpr { type_expr } ->
       let size_in_bytes = type_size_in_bytes type_expr in
@@ -273,6 +288,7 @@ let rec codegen_expr = function
       | _ -> print_any_type value llvm_type)
   | Expr.UnaryExpr { operator; operand } -> (
       let var_val = codegen_expr operand in
+      let is_float = classify_type (type_of var_val) = TypeKind.Double in
       let var_name =
         match operand with
         | Expr.VarExpr identifier -> identifier
@@ -294,6 +310,9 @@ let rec codegen_expr = function
           let var_alloca = Hashtbl.find variables var_name in
           ignore (build_store decremented var_alloca builder);
           decremented
+      | Ast.Minus ->
+          if is_float then build_fneg var_val "fnegtmp" builder
+          else build_neg var_val "negtmp" builder
       | _ -> failwith "Unsupported unary operator")
   | Expr.CastExpr { expr; target_type } -> (
       let value = codegen_expr expr in

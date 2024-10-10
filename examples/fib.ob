@@ -15,6 +15,6 @@ fn fib(int n) int {
 }
 
 fn main() int {
-    println(fib(68));
+    println(fib(92));
     return 0;
 }
