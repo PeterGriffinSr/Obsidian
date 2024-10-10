@@ -35,7 +35,7 @@ fn radToDeg(float rad) float {
 fn sin(float x, int terms) float {
     float sin = 0.0;
     for (int n = 0; n < terms; n++) {
-        int sign = ((n % 2) == 0) ? 1 : -1; 
+        int sign = ((n % 2) == 0) ? 1 : -1;
         sin += cast(sign, float) * pow(x, 2 * n + 1) / factorial(2 * n + 1);
     }
     return sin;

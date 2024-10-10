@@ -45,14 +45,7 @@ module TypeChecker = struct
             if left_type = right_type then left_type
             else failwith "Type mismatch in arithmetic expression"
         | Eq | Neq | Less | Greater | Leq | Geq ->
-            if
-              (left_type = Type.SymbolType { value = "bool" }
-              || left_type = Type.SymbolType { value = "int" }
-              || left_type = Type.SymbolType { value = "float" })
-              && (left_type = Type.SymbolType { value = "bool" }
-                 || right_type = Type.SymbolType { value = "int" }
-                 || left_type = Type.SymbolType { value = "float" })
-            then Ast.Type.SymbolType { value = "bool" }
+            if left_type = right_type then Type.SymbolType { value = "bool" }
             else failwith "Type mismatch in comparison expression"
         | Carot ->
             if
@@ -66,11 +59,9 @@ module TypeChecker = struct
         | LogicalAnd | LogicalOr ->
             if
               (left_type = Type.SymbolType { value = "bool" }
-              || left_type = Type.SymbolType { value = "int" }
-              || left_type = Type.SymbolType { value = "float" })
+              || left_type = Type.SymbolType { value = "int" })
               && (left_type = Type.SymbolType { value = "bool" }
-                 || right_type = Type.SymbolType { value = "int" }
-                 || left_type = Type.SymbolType { value = "float" })
+                 || right_type = Type.SymbolType { value = "int" })
             then Ast.Type.SymbolType { value = "bool" }
             else failwith "TypeChecker: Type mismatch in logical expression"
         | _ -> failwith "Unsupported operator in binary expression")
