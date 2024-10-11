@@ -1,3 +1,10 @@
+exception TypeError of string
+exception UnboundFunctionError of string
+exception UnboundVariableError of string
+exception UnsupportedOperationError of string
+exception ArgumentMismatchError of string
+exception ReturnTypeError of string
+
 module TypeChecker : sig
   module Env : sig
     type key = string
@@ -59,6 +66,7 @@ module TypeChecker : sig
   val empty_env : env
   val lookup_function : env -> Env.key -> func_sig
   val lookup_variables : env -> Env.key -> Ast.Type.t
+  val raise_type_mismatch_error : Ast.Type.t -> Ast.Type.t -> 'a
   val check_expr : env -> Ast.Expr.t -> Ast.Type.t
   val check_enum_decl : env -> Env.key -> string list -> env
 

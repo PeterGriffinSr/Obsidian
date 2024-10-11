@@ -55,13 +55,18 @@ let concatenate_strings left right =
 
   result
 
+let declare_malloc_function _context the_module =
+  let i8_ptr_type = pointer_type i64_type in
+  let malloc_type = function_type i8_ptr_type [| i64_type |] in
+  declare_function "malloc" malloc_type the_module
+
 let type_size_in_bytes = function
   | Ast.Type.SymbolType { value = "int" } -> 8
   | Ast.Type.SymbolType { value = "float" } -> 8
   | Ast.Type.SymbolType { value = "char" } -> 1
   | Ast.Type.SymbolType { value = "string" } -> 8
   | Ast.Type.SymbolType { value = "bool" } -> 1
-  | _ -> failwith "Unsupported type for sizeof"
+  | _ -> failwith "Codegen: Unsupported type for sizeof"
 
 let string_of_llvm_type llvm_type =
   match classify_type llvm_type with
@@ -87,8 +92,8 @@ let print_any_type value llvm_type =
       let format_str = build_global_stringptr "%s\n" "str_fmt" builder in
       ignore (build_call printf_func [| format_str; value |] "printtmp" builder);
       value
-  | TypeKind.Void -> failwith "Cannot print void type"
-  | _ -> failwith "Unsupported type for println"
+  | TypeKind.Void -> failwith "Codegen: Cannot print void type"
+  | _ -> failwith "Codegen: Unsupported type for println"
 
 let rec codegen_expr = function
   | Expr.IntExpr { value } -> const_int i64_type value
@@ -134,7 +139,7 @@ let rec codegen_expr = function
           let var_name =
             match left with
             | Expr.VarExpr identifier -> identifier
-            | _ -> failwith "Left-hand side of += must be a variable"
+            | _ -> failwith "Codegen: Left-hand side of += must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
           let updated_value = build_add left_val right_val "addtmp" builder in
@@ -144,7 +149,7 @@ let rec codegen_expr = function
           let var_name =
             match left with
             | Expr.VarExpr identifier -> identifier
-            | _ -> failwith "Left-hand side of -= must be a variable"
+            | _ -> failwith "Codegen: Left-hand side of -= must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
           let updated_value = build_sub left_val right_val "subtmp" builder in
@@ -154,7 +159,7 @@ let rec codegen_expr = function
           let var_name =
             match left with
             | Expr.VarExpr identifier -> identifier
-            | _ -> failwith "Left-hand side of *= must be a variable"
+            | _ -> failwith "Codegen: Left-hand side of *= must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
           let updated_value = build_mul left_val right_val "multmp" builder in
@@ -164,7 +169,7 @@ let rec codegen_expr = function
           let var_name =
             match left with
             | Expr.VarExpr identifier -> identifier
-            | _ -> failwith "Left-hand side of /= must be a variable"
+            | _ -> failwith "Codegen: Left-hand side of /= must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
           let updated_value = build_sdiv left_val right_val "divtmp" builder in
@@ -184,7 +189,7 @@ let rec codegen_expr = function
           let var_name =
             match left with
             | Expr.VarExpr identifier -> identifier
-            | _ -> failwith "Left-hand side of += must be a variable"
+            | _ -> failwith "Codegen: Left-hand side of += must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
           let updated_value = build_fadd left_val right_val "faddtmp" builder in
@@ -194,7 +199,7 @@ let rec codegen_expr = function
           let var_name =
             match left with
             | Expr.VarExpr identifier -> identifier
-            | _ -> failwith "Left-hand side of -= must be a variable"
+            | _ -> failwith "Codegen: Left-hand side of -= must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
           let updated_value = build_fsub left_val right_val "fsubtmp" builder in
@@ -204,7 +209,7 @@ let rec codegen_expr = function
           let var_name =
             match left with
             | Expr.VarExpr identifier -> identifier
-            | _ -> failwith "Left-hand side of *= must be a variable"
+            | _ -> failwith "Codegen: Left-hand side of *= must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
           let updated_value = build_fmul left_val right_val "fmultmp" builder in
@@ -214,7 +219,7 @@ let rec codegen_expr = function
           let var_name =
             match left with
             | Expr.VarExpr identifier -> identifier
-            | _ -> failwith "Left-hand side of /= must be a variable"
+            | _ -> failwith "Codegen: Left-hand side of /= must be a variable"
           in
           let var_alloca = Hashtbl.find variables var_name in
           let updated_value = build_fdiv left_val right_val "fdivtmp" builder in
@@ -248,7 +253,9 @@ let rec codegen_expr = function
       | Ast.LogicalAnd, true, true ->
           build_and left_val right_val "andtmp" builder
       | Ast.LogicalOr, true, true -> build_or left_val right_val "ortmp" builder
-      | _ -> failwith "Mixed or unsupported operand types for binary operation")
+      | _ ->
+          failwith
+            "Codegen: Mixed or unsupported operand types for binary operation")
   | Expr.SizeofExpr { type_expr } ->
       let size_in_bytes = type_size_in_bytes type_expr in
       const_int i64_type size_in_bytes
@@ -256,12 +263,12 @@ let rec codegen_expr = function
       try
         let var_alloca = Hashtbl.find variables identifier in
         build_load var_alloca identifier builder
-      with Not_found -> failwith ("Unknown variable: " ^ identifier))
+      with Not_found -> failwith ("Codegen: Unknown variable: " ^ identifier))
   | Expr.CallExpr { callee; arguments } -> (
       let func_name =
         match callee with
         | Expr.VarExpr name -> name
-        | _ -> failwith "Codegen error: Unsupported function call format"
+        | _ -> failwith "Codegen: Unsupported function call format"
       in
       match lookup_function func_name the_module with
       | Some func ->
@@ -270,12 +277,12 @@ let rec codegen_expr = function
           let func_type = return_type (element_type (type_of func)) in
           if Array.length arg_vals_array != Array.length (params func) then
             failwith
-              ("Codegen error: Incorrect number of arguments for function "
+              ("Codegen: Incorrect number of arguments for function "
              ^ func_name);
           if classify_type func_type = TypeKind.Void then
             build_call func arg_vals_array "" builder
           else build_call func arg_vals_array "calltmp" builder
-      | None -> failwith ("Codegen error: Unknown function " ^ func_name))
+      | None -> failwith ("Codegen: Unknown function " ^ func_name))
   | Expr.PrintlnExpr { expr } -> (
       let value = codegen_expr expr in
       let llvm_type = type_of value in
@@ -292,7 +299,9 @@ let rec codegen_expr = function
       let var_name =
         match operand with
         | Expr.VarExpr identifier -> identifier
-        | _ -> failwith "Increment/Decrement can only be applied to variables"
+        | _ ->
+            failwith
+              "Codegen: Increment/Decrement can only be applied to variables"
       in
       match operator with
       | Ast.Not -> build_not var_val "nottmp" builder
@@ -313,7 +322,7 @@ let rec codegen_expr = function
       | Ast.Minus ->
           if is_float then build_fneg var_val "fnegtmp" builder
           else build_neg var_val "negtmp" builder
-      | _ -> failwith "Unsupported unary operator")
+      | _ -> failwith "Codegen: Unsupported unary operator")
   | Expr.CastExpr { expr; target_type } -> (
       let value = codegen_expr expr in
       let target_llvm_type =
@@ -321,7 +330,7 @@ let rec codegen_expr = function
         | Ast.Type.SymbolType { value = "int" } -> i64_type
         | Ast.Type.SymbolType { value = "float" } -> f64_type
         | Ast.Type.SymbolType { value = "string" } -> string_type
-        | _ -> failwith "Unsupported target type for cast"
+        | _ -> failwith "Codegen: Unsupported target type for cast"
       in
       match (classify_type (type_of value), classify_type target_llvm_type) with
       | TypeKind.Integer, TypeKind.Double ->
@@ -335,7 +344,7 @@ let rec codegen_expr = function
       | TypeKind.Pointer, TypeKind.Integer ->
           build_ptrtoint value target_llvm_type "casttmp" builder
       | _, _ when type_of value = target_llvm_type -> value
-      | _ -> failwith "Unsupported cast operation")
+      | _ -> failwith "Codegen: Unsupported cast operation")
   | Expr.TypeofExpr { expr } ->
       let value = codegen_expr expr in
       let llvm_type_str = string_of_llvm_type (type_of value) in
@@ -343,7 +352,7 @@ let rec codegen_expr = function
   | Expr.LengthExpr { expr } ->
       let value = codegen_expr expr in
       if classify_type (type_of value) <> TypeKind.Pointer then
-        failwith "LengthExpr is only valid for strings";
+        failwith "Codegen: LengthExpr is only valid for strings";
       let strlen_function =
         match lookup_function "strlen" the_module with
         | Some f -> f
@@ -388,7 +397,7 @@ let rec codegen_expr = function
         let new_value = codegen_expr expr_value in
         ignore (build_store new_value var_alloca builder);
         new_value
-      with Not_found -> failwith ("Unknown variable: " ^ identifier))
+      with Not_found -> failwith ("Codegen: Unknown variable: " ^ identifier))
   | Expr.TernaryExpr { cond; onTrue; onFalse } ->
       let cond_val = codegen_expr cond in
       let zero = const_int i1_type 0 in
@@ -418,7 +427,7 @@ let rec codegen_expr = function
 
       position_at_end merge_bb builder;
       build_load result_alloca "iftmp" builder
-  | _ -> failwith "Expression not implemented"
+  | _ -> failwith "Codegen: Expression not implemented"
 
 let rec codegen_stmt = function
   | Stmt.ExprStmt expr -> codegen_expr expr
@@ -431,14 +440,65 @@ let rec codegen_stmt = function
         | Ast.Type.SymbolType { value = "char" } -> char_type
         | Ast.Type.SymbolType { value = "string" } -> string_type
         | Ast.Type.SymbolType { value = "bool" } -> i1_type
-        | _ -> failwith "Unsupported type for variable declaration"
+        | Ast.Type.ArrayType { element } ->
+            let elem_type =
+              match element with
+              | Ast.Type.SymbolType { value = "int" } -> i64_type
+              | Ast.Type.SymbolType { value = "float" } -> f64_type
+              | Ast.Type.SymbolType { value = "char" } -> char_type
+              | Ast.Type.SymbolType { value = "string" } -> string_type
+              | _ -> failwith "Codegen: Unsupported array element type"
+            in
+            pointer_type elem_type
+        | _ -> failwith "Codegen: Unsupported type for variable declaration"
       in
-      let alloca = build_alloca llvm_type identifier builder in
+      let alloca =
+        match explicit_type with
+        | Ast.Type.ArrayType { element = _ } ->
+            let num_elements =
+              match assigned_value with
+              | Some (Ast.Expr.ArrayExpr { elements }) -> List.length elements
+              | _ ->
+                  failwith
+                    "Codegen: Array requires initialization with elements"
+            in
+            let element_size = size_of llvm_type in
+            let total_size =
+              build_mul
+                (const_int i64_type num_elements)
+                element_size "array_size" builder
+            in
+            let malloc_fn = declare_malloc_function context the_module in
+            build_call malloc_fn [| total_size |] "array_alloc" builder
+        | _ -> build_alloca llvm_type identifier builder
+      in
       Hashtbl.add variables identifier alloca;
       (match assigned_value with
-      | Some expr ->
-          let initial_value = codegen_expr expr in
-          ignore (build_store initial_value alloca builder)
+      | Some expr -> (
+          match explicit_type with
+          | Ast.Type.ArrayType { element = _ } ->
+              let initial_values =
+                match expr with
+                | Ast.Expr.ArrayExpr { elements } -> elements
+                | _ ->
+                    failwith
+                      "Codegen: Expected array literal for array initialization"
+              in
+              let array_index = ref 0 in
+              List.iter
+                (fun elem_expr ->
+                  let elem_value = codegen_expr elem_expr in
+                  let index_ptr =
+                    build_gep alloca
+                      [| const_int i64_type !array_index |]
+                      "index_ptr" builder
+                  in
+                  ignore (build_store elem_value index_ptr builder);
+                  incr array_index)
+                initial_values
+          | _ ->
+              let initial_value = codegen_expr expr in
+              ignore (build_store initial_value alloca builder))
       | None -> ());
       alloca
   | Stmt.BlockStmt { body } ->
@@ -454,7 +514,7 @@ let rec codegen_stmt = function
         | Some (Ast.Type.SymbolType { value = "string" }) -> string_type
         | Some (Ast.Type.SymbolType { value = "bool" }) -> i1_type
         | Some (Ast.Type.SymbolType { value = "void" }) -> void_type
-        | _ -> failwith "Unsupported function return type"
+        | _ -> failwith "Codegen: Unsupported function return type"
       in
       let param_types =
         Array.of_list
@@ -466,7 +526,7 @@ let rec codegen_stmt = function
                | Ast.Type.SymbolType { value = "char" } -> char_type
                | Ast.Type.SymbolType { value = "string" } -> string_type
                | Ast.Type.SymbolType { value = "bool" } -> i1_type
-               | _ -> failwith "Unsupported parameter type")
+               | _ -> failwith "Codegen: Unsupported parameter type")
              parameters)
       in
       let func_type = function_type llvm_return_type param_types in
@@ -622,7 +682,7 @@ let rec codegen_stmt = function
 
       position_at_end after_bb builder;
       const_int i64_type 0
-  | _ -> failwith "Statement not implemented"
+  | _ -> failwith "Codegen: Statement not implemented"
 
 let generate_code ast =
   ignore (codegen_stmt ast);

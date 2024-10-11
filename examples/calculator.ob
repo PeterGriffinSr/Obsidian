@@ -18,6 +18,10 @@ fn div(int x, int y) float {
     return cast(x / y, float);
 }
 
+fn power(float base, float exp) int {
+    return cast(base ** exp, int);
+}
+
 fn main() int {
     char op = input("Enter op: ", char);
     int x = input("Enter number one: ", int);
@@ -32,6 +36,10 @@ fn main() int {
             println(mult(x, y));
         case '/':
             println(div(y, x));
+        case '^':
+            println(power(cast(x, float), cast(y, float)));
+        case '%':
+            println(cast(x % y, float));
         default:
             println("case not found!");
     }

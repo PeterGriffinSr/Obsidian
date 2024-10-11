@@ -3,17 +3,18 @@
 
   let line = ref 1
   let column = ref 0
+  
   let get_line () = !line
   let get_column () = !column
-  let update_column () =
-    incr column
-  let update_line () =
-    incr line;
-    column := 0
+  
+  let update_column () = incr column
+  let update_line () = (incr line; column := 0)
+  
   let update_column_with_lexeme lexbuf =
     let lexeme = Lexing.lexeme lexbuf in
     column := !column + String.length lexeme;
     lexeme
+  
   let token_and_update_column t lexbuf =
     let token_length = Lexing.lexeme_end lexbuf - Lexing.lexeme_start lexbuf in
     column := !column + token_length;
@@ -113,6 +114,7 @@ rule token = parse
     | '\'' [^'\''] '\''     { let lexeme = Lexing.lexeme lexbuf in column := !column + String.length lexeme; CharLit (lexeme.[1]) }
     | '"' [^'"']* '"'       { let lexeme = Lexing.lexeme lexbuf in column := !column + String.length lexeme; StringLit (String.sub lexeme 1 (String.length lexeme - 2)) }
     | eof                   { EOF }
+    | _                     { let saved_line = get_line () in let saved_column = get_column () in let lexeme = Lexing.lexeme lexbuf in Printf.eprintf "Unexpected token '%s' at Line %d, Column %d\n" lexeme saved_line saved_column; exit (-1) }
 
 and read_comment = parse
     | '\n'                 { incr line; column := 0; token lexbuf }

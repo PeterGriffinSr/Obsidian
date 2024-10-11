@@ -1,5 +1,12 @@
 open Ast
 
+exception TypeError of string
+exception UnboundFunctionError of string
+exception UnboundVariableError of string
+exception UnsupportedOperationError of string
+exception ArgumentMismatchError of string
+exception ReturnTypeError of string
+
 module TypeChecker = struct
   module Env = Map.Make (String)
 
@@ -23,11 +30,19 @@ module TypeChecker = struct
 
   let lookup_function env name =
     try Env.find name env.func_type
-    with Not_found -> failwith ("Unbound function: " ^ name)
+    with Not_found ->
+      raise (UnboundFunctionError ("Typechecker: Unbound function: " ^ name))
 
   let lookup_variables env name =
     try Env.find name env.var_type
-    with Not_found -> failwith ("Unbound variable: " ^ name)
+    with Not_found ->
+      raise (UnboundVariableError ("Typechecker: Unbound variable: " ^ name))
+
+  let raise_type_mismatch_error expected actual =
+    raise
+      (TypeError
+         ("Type mismatch: expected " ^ Type.show expected ^ ", got "
+        ^ Type.show actual))
 
   let rec check_expr env = function
     | Expr.IntExpr _ -> Type.SymbolType { value = "int" }
@@ -43,47 +58,60 @@ module TypeChecker = struct
         | MinusAssign | StarAssign | SlashAssign | Ampersand | Pipe | Rightshift
         | Leftshift | Xor ->
             if left_type = right_type then left_type
-            else failwith "Type mismatch in arithmetic expression"
+            else raise_type_mismatch_error left_type right_type
         | Eq | Neq | Less | Greater | Leq | Geq ->
-            if left_type = right_type then Type.SymbolType { value = "bool" }
-            else failwith "Type mismatch in comparison expression"
+            if left_type = right_type then
+              match left_type with
+              | Type.SymbolType { value = "int" }
+              | Type.SymbolType { value = "float" }
+              | Type.SymbolType { value = "string" } ->
+                  Type.SymbolType { value = "bool" }
+              | _ ->
+                  raise
+                    (UnsupportedOperationError
+                       "Typechecker: Unsupported type for comparison")
+            else raise_type_mismatch_error left_type right_type
+        | LogicalAnd | LogicalOr ->
+            if
+              left_type = Type.SymbolType { value = "bool" }
+              && right_type = Type.SymbolType { value = "bool" }
+            then Type.SymbolType { value = "bool" }
+            else
+              raise
+                (TypeError
+                   "Typechecker: Logical operators require boolean operands")
         | Carot ->
             if
               left_type = Type.SymbolType { value = "string" }
               && right_type = Type.SymbolType { value = "string" }
             then Type.SymbolType { value = "string" }
             else
-              failwith
-                "TypeChecker: Type mismatch in string concatenation, both \
-                 operands must be strings"
-        | LogicalAnd | LogicalOr ->
-            if
-              (left_type = Type.SymbolType { value = "bool" }
-              || left_type = Type.SymbolType { value = "int" })
-              && (left_type = Type.SymbolType { value = "bool" }
-                 || right_type = Type.SymbolType { value = "int" })
-            then Ast.Type.SymbolType { value = "bool" }
-            else failwith "TypeChecker: Type mismatch in logical expression"
-        | _ -> failwith "Unsupported operator in binary expression")
+              raise
+                (TypeError
+                   "Typechecker: String concatenation requires both operands \
+                    to be strings")
+        | _ ->
+            raise
+              (UnsupportedOperationError
+                 "Typechecker: Unsupported operator in binary expression"))
     | Expr.VarExpr name -> lookup_variables env name
     | Expr.CallExpr { callee; arguments } ->
         let func_name =
           match callee with
           | Expr.VarExpr name -> name
-          | _ -> failwith "TypeChecker: Unsupported function call"
+          | _ -> raise (TypeError "Typechecker: Unsupported function call")
         in
         let { param_type; return_type } = lookup_function env func_name in
         if List.length arguments <> List.length param_type then
-          failwith
-            ("TypeChecker: Incorrect number of arguments for function "
-           ^ func_name);
+          raise
+            (ArgumentMismatchError
+               ("Typechecker: Incorrect number of arguments for function "
+              ^ func_name));
         List.iter2
           (fun arg param_type ->
             let arg_type = check_expr env arg in
             if arg_type <> param_type then
-              failwith
-                ("TypeChecker: Argument type mismatch in call to function "
-               ^ func_name))
+              raise_type_mismatch_error param_type arg_type)
           arguments param_type;
         return_type
     | Expr.UnaryExpr { operator; operand } -> (
@@ -93,24 +121,26 @@ module TypeChecker = struct
             if operand_type = Ast.Type.SymbolType { value = "bool" } then
               Ast.Type.SymbolType { value = "bool" }
             else
-              failwith "TypeChecker: Operand of NOT operator must be a boolean"
+              raise
+                (TypeError
+                   "Typechecker: Operand of NOT operator must be a boolean")
         | Ast.Inc | Ast.Dec ->
             if
               operand_type = Ast.Type.SymbolType { value = "int" }
               || operand_type = Ast.Type.SymbolType { value = "float" }
             then operand_type
             else
-              failwith
-                "TypeChecker: Operand of INC/DEC must be an integer or float"
+              raise
+                (TypeError "Typechecker: INC/DEC requires int or float operand")
         | Ast.Minus ->
             if
               operand_type = Ast.Type.SymbolType { value = "int" }
               || operand_type = Ast.Type.SymbolType { value = "float" }
             then operand_type
             else
-              failwith
-                "TypeChecker: Operand of MINUS must be an integer or float"
-        | _ -> failwith "TypeChecker: Unsupported unary operator")
+              raise
+                (TypeError "Typechecker: MINUS requires int or float operand")
+        | _ -> raise (UnsupportedOperationError "Unsupported unary operator"))
     | Expr.PrintlnExpr { expr } ->
         let _ = check_expr env expr in
         Type.SymbolType { value = "void" }
@@ -118,7 +148,8 @@ module TypeChecker = struct
         let expr_type = check_expr env expr in
         if expr_type = Type.SymbolType { value = "string" } then
           Type.SymbolType { value = "int" }
-        else failwith "TypeChecker: length can only be applied to a string"
+        else
+          raise (TypeError "Typechecker: Length can only be applied to strings")
     | Expr.CastExpr { expr; target_type } -> (
         let source_type = check_expr env expr in
         match (source_type, target_type) with
@@ -136,9 +167,10 @@ module TypeChecker = struct
             target_type
         | _ when source_type = target_type -> target_type
         | _ ->
-            failwith
-              ("TypeChecker: Unsupported cast from " ^ Type.show source_type
-             ^ " to " ^ Type.show target_type))
+            raise
+              (TypeError
+                 ("Typechecker: Unsupported cast from " ^ Type.show source_type
+                ^ " to " ^ Type.show target_type)))
     | Expr.TypeofExpr { expr } ->
         let _ = check_expr env expr in
         Type.SymbolType { value = "string" }
@@ -150,7 +182,10 @@ module TypeChecker = struct
         | Ast.Type.SymbolType { value = "string" }
         | Ast.Type.SymbolType { value = "bool" } ->
             Type.SymbolType { value = "int" }
-        | _ -> failwith "TypeChecker: Unsupported type for sizeof")
+        | _ ->
+            raise
+              (UnsupportedOperationError
+                 "Typechecker: Unsupported type for sizeof"))
     | Expr.InputExpr { prompt = _; target_type } -> (
         match target_type with
         | Type.SymbolType { value = "int" }
@@ -158,50 +193,46 @@ module TypeChecker = struct
         | Type.SymbolType { value = "char" }
         | Type.SymbolType { value = "string" } ->
             target_type
-        | _ -> failwith "TypeChecker: Unsupported type for input")
+        | _ -> raise (TypeError "Typechecker: Unsupported type for input"))
     | Expr.AssignmentExpr { identifier; value = Some expr_value } ->
         let var_type = lookup_variables env identifier in
         let assigned_type = check_expr env expr_value in
         if var_type <> assigned_type then
-          failwith
-            ("Type mismatch in assignment to variable " ^ identifier
-           ^ ": expected " ^ Type.show var_type ^ ", got "
-           ^ Type.show assigned_type)
+          raise_type_mismatch_error var_type assigned_type
         else var_type
     | Expr.ArrayExpr { elements } -> (
         match elements with
-        | [] -> failwith "TypeChecker: Cannot infer type of an empty array"
+        | [] ->
+            raise (TypeError "Typechecker: Cannot infer type of an empty array")
         | first_elem :: _ ->
             let elem_type = check_expr env first_elem in
             List.iter
               (fun elem ->
                 let t = check_expr env elem in
                 if t <> elem_type then
-                  failwith "TypeChecker: Type mismatch in array elements")
+                  raise (TypeError "Type mismatch in array elements"))
               elements;
             Type.ArrayType { element = elem_type })
     | Expr.IndexExpr { array; index } -> (
         let array_type = check_expr env array in
         let index_type = check_expr env index in
         if index_type <> Type.SymbolType { value = "int" } then
-          failwith "TypeChecker: Array index must be an integer";
+          raise (TypeError "Typechecker: Array index must be an integer");
         match array_type with
         | Type.ArrayType { element } -> element
-        | _ -> failwith "TypeChecker: Cannot index non-array type")
+        | _ -> raise (TypeError "Typechecker: Cannot index non-array type"))
     | Expr.TernaryExpr { cond; onTrue; onFalse } ->
         let cond_type = check_expr env cond in
         if cond_type <> Type.SymbolType { value = "bool" } then
-          failwith
-            "TypeChecker: Condition in ternary expression must be a boolean";
+          raise
+            (TypeError
+               "Typechecker: Condition in ternary expression must be a boolean");
         let true_type = check_expr env onTrue in
         let false_type = check_expr env onFalse in
         if true_type = false_type then true_type
-        else
-          failwith
-            ("TypeChecker: Type mismatch in ternary expression: "
-           ^ "onTrue is of type " ^ Type.show true_type
-           ^ " while onFalse is of type " ^ Type.show false_type)
-    | _ -> failwith "Unsupported expression"
+        else raise_type_mismatch_error true_type false_type
+    | _ ->
+        raise (UnsupportedOperationError "Typechecker: Unsupported expression")
 
   let check_enum_decl env name members =
     let enum_type =
@@ -217,7 +248,9 @@ module TypeChecker = struct
         let value_type = check_expr env expr in
         if value_type = explicit_type then
           { env with var_type = Env.add identifier explicit_type env.var_type }
-        else failwith ("Type mismatch in variable declaration: " ^ identifier)
+        else
+          raise
+            (TypeError ("Type mismatch in variable declaration: " ^ identifier))
     | None ->
         { env with var_type = Env.add identifier explicit_type env.var_type }
 
@@ -251,7 +284,10 @@ module TypeChecker = struct
         let return_type =
           match return_type with
           | Some t -> t
-          | None -> failwith ("Function " ^ name ^ " must have a return type")
+          | None ->
+              raise
+                (ReturnTypeError
+                   ("Typechecker: Function " ^ name ^ " must have a return type"))
         in
         check_func_decl env name parameters return_type body
     | Stmt.ReturnStmt expr -> (
@@ -259,15 +295,18 @@ module TypeChecker = struct
         match expected_return_type with
         | Some expected_type ->
             if return_type <> expected_type then
-              failwith
-                ("Return type mismatch: expected " ^ Type.show expected_type
-               ^ ", got " ^ Type.show return_type)
+              raise
+                (ReturnTypeError
+                   ("Typechecker: Return type mismatch: expected "
+                  ^ Type.show expected_type ^ ", got " ^ Type.show return_type))
             else env
         | None -> env)
     | Stmt.IfStmt { condition; then_branch; else_branch } ->
         let cond_type = check_expr env condition in
         if cond_type <> Ast.Type.SymbolType { value = "bool" } then
-          failwith "TypeChecker: Condition in if statement must be a boolean"
+          raise
+            (TypeError
+               "Typechecker: Condition in if statement must be a boolean")
         else
           let env_then = check_stmt env ~expected_return_type then_branch in
           let env_final =
@@ -283,9 +322,10 @@ module TypeChecker = struct
           (fun (case_expr, case_body) ->
             let case_type = check_expr env case_expr in
             if case_type <> switch_type then
-              failwith
-                "TypeChecker: Case expression type does not match switch \
-                 expression";
+              raise
+                (TypeError
+                   "Typechecker: Case expression type does not match switch \
+                    expression");
             ignore (check_block env case_body ~expected_return_type))
           cases;
         (match default_case with
@@ -301,7 +341,9 @@ module TypeChecker = struct
         let _ =
           let cond_type = check_expr env condition in
           if cond_type <> Ast.Type.SymbolType { value = "bool" } then
-            failwith "TypeChecker: Condition in for statement must be a boolean"
+            raise
+              (TypeError
+                 "Typechecker: Condition in for statement must be a boolean")
         in
         let env =
           match iteration with
@@ -313,11 +355,14 @@ module TypeChecker = struct
         let _ =
           let cond_type = check_expr env expr in
           if cond_type <> Ast.Type.SymbolType { value = "bool" } then
-            failwith "TypeChecker: Condition in for statement must be a boolean"
+            raise
+              (TypeError
+                 "Typechecker: Condition in while statement must be a boolean")
         in
         check_block env body ~expected_return_type
     | Stmt.EnumDeclStmt { name; members } -> check_enum_decl env name members
-    | _ -> failwith "Unsupported statement"
+    | _ ->
+        raise (UnsupportedOperationError "Typechecker: Unsupported statement")
 
   and check_block env stmts ~expected_return_type =
     List.fold_left

@@ -1,4 +1,5 @@
 open Syntax
+open Typechecker
 
 let print_help () =
   Printf.printf "Usage: obsidian [options] file...\n";
@@ -7,22 +8,19 @@ let print_help () =
   Printf.printf "  -S               Compile only; do not assemble or link.\n";
   Printf.printf "  -o <file>        Place the output into <file>.\n"
 
-let print_error_position filename _lexbuf =
-  let line_num = Lexer.get_line () in
-  let col_num = Lexer.get_column () in
-
+let print_error_position filename saved_line saved_column =
   let file_channel = open_in filename in
   let rec read_lines i =
     try
       let line = input_line file_channel in
-      if i = line_num then Some line else read_lines (i + 1)
+      if i = saved_line then Some line else read_lines (i + 1)
     with End_of_file -> None
   in
   let line_content = match read_lines 1 with Some line -> line | None -> "" in
   close_in file_channel;
-
-  Printf.printf "Parser Error at Line %d, Column %d\n-> %s\n" line_num col_num
-    line_content
+  Printf.printf "Error at Line %d, Column %d\n" saved_line saved_column;
+  Printf.printf "%s\n" line_content;
+  Printf.printf "%s^\n" (String.make saved_column ' ')
 
 let remove_entry1_lines filename =
   let in_channel = open_in filename in
@@ -72,7 +70,7 @@ let () =
             print_help ();
             exit 0),
         "Display this help message" );
-      ("-S", Arg.Set save_asm, "Compile only; do not assemble or link.`");
+      ("-S", Arg.Set save_asm, "Compile only; do not assemble or link.");
       ( "-o",
         Arg.String (fun s -> output_name := s),
         "Specify the output file name" );
@@ -102,11 +100,36 @@ let () =
   try
     let ast = Parser.program Lexer.token lexbuf in
 
-    let initial_env = Typechecker.TypeChecker.empty_env in
+    let initial_env = TypeChecker.empty_env in
 
     let _ =
-      Typechecker.TypeChecker.check_block initial_env [ ast ]
-        ~expected_return_type:None
+      try
+        TypeChecker.check_block initial_env [ ast ] ~expected_return_type:None
+      with
+      | TypeError msg ->
+          Printf.eprintf "%s\n" msg;
+          close_in file_channel;
+          exit (-1)
+      | UnboundFunctionError msg ->
+          Printf.eprintf "%s\n" msg;
+          close_in file_channel;
+          exit (-1)
+      | UnboundVariableError msg ->
+          Printf.eprintf "%s\n" msg;
+          close_in file_channel;
+          exit (-1)
+      | UnsupportedOperationError msg ->
+          Printf.eprintf "%s\n" msg;
+          close_in file_channel;
+          exit (-1)
+      | ArgumentMismatchError msg ->
+          Printf.eprintf "%s\n" msg;
+          close_in file_channel;
+          exit (-1)
+      | ReturnTypeError msg ->
+          Printf.eprintf "%s\n" msg;
+          close_in file_channel;
+          exit (-1)
     in
 
     Codegen.generate_code ast;
@@ -118,8 +141,9 @@ let () =
       ~optimization_level:!optimization_level
   with
   | Parser.Error ->
-      print_error_position filename lexbuf;
-      Printf.fprintf stderr "Missing ';' at the end of the statement.\n";
+      print_error_position filename (Lexer.get_line ()) (Lexer.get_column ());
+      Printf.fprintf stderr
+        "Syntax Error: Check for missing or misplaced ';'.\n";
       close_in file_channel;
       exit (-1)
   | Failure msg ->
@@ -127,7 +151,6 @@ let () =
       close_in file_channel;
       exit (-1)
   | e ->
-      Printf.fprintf stderr "An unexpected error occurred: %s\n"
-        (Printexc.to_string e);
+      Printf.fprintf stderr "Unhandled Exception: %s\n" (Printexc.to_string e);
       close_in file_channel;
       exit (-1)

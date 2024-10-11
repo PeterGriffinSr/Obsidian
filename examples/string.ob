@@ -1,0 +1,20 @@
+fn strcmp(string StringOne, string StringTwo) bool {
+    return (StringOne == StringTwo) ? true : false; // However this works????
+}
+
+fn strcmpTwo(string StringOne, string StringTwo) bool {
+    if (StringOne == StringTwo) {
+        return true; // Condtion is matched however doesn't return true
+    }
+    return false; // Will always return false even if condition is met
+}
+
+fn main() int {
+    string command = "Hello";
+    if (strcmp(command, "Hello")) {
+        println("this works");
+    } else {
+        println("damn");
+    }
+    return 0;
+}

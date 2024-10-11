@@ -102,6 +102,7 @@ expr:
     | Length LParen expr RParen { Ast.Expr.LengthExpr { expr = $3 } }
     | Input LParen StringLit Comma type_expr RParen { Ast.Expr.InputExpr { prompt = $3; target_type = $5 } }
     | Identifier Assign expr { Ast.Expr.AssignmentExpr { identifier = $1; value = Some $3 } }
+    | LBrace RBrace { Ast.Expr.ArrayExpr { elements = [] } }
     | LBrace expr_list RBrace { Ast.Expr.ArrayExpr { elements = $2 } }
     | Identifier LBracket expr RBracket { Ast.Expr.IndexExpr { array = Ast.Expr.VarExpr $1; index = $3 } }
     | expr PlusAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.PlusAssign; right = $3 } }
