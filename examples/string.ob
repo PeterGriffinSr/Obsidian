@@ -10,7 +10,7 @@ fn strcmpTwo(string StringOne, string StringTwo) bool {
 }
 
 fn main() int {
-    string command = "Hello";
+    string command = input("Enter string: ", string);
     if (strcmp(command, "Hello")) {
         println("this works");
     } else {

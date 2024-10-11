@@ -19,4 +19,6 @@ Need to fix
 Fix Recursion // Segfaults don't know why tho
 Fix that 12 byte memory leak for concat
 Fix return // Best way to describe it look in string.ob 
+Fix Printing for chars
+Fix input for string
 --------
