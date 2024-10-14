@@ -11,7 +11,12 @@ fn factorial(int n) float {
 }
 
 fn pow(float x, int n) float {
-    return x ** cast(n, float); 
+    float res = 1.0;
+    for (int i = 0; i < n; i++) {
+        res *= x;
+    }
+    return res;
+    // return cast(x ** cast(n, float), float);
 }
 
 fn abs(float x) float {

@@ -81,9 +81,17 @@ let string_of_llvm_type llvm_type =
 let print_any_type value llvm_type =
   match classify_type llvm_type with
   | TypeKind.Integer ->
-      let format_str = build_global_stringptr "%ld\n" "int_fmt" builder in
-      ignore (build_call printf_func [| format_str; value |] "printtmp" builder);
-      value
+      let value_type = integer_bitwidth llvm_type in
+      if value_type = 8 then (
+        let format_str = build_global_stringptr "%c\n" "char_fmt" builder in
+        ignore
+          (build_call printf_func [| format_str; value |] "printtmp" builder);
+        value)
+      else
+        let format_str = build_global_stringptr "%ld\n" "int_fmt" builder in
+        ignore
+          (build_call printf_func [| format_str; value |] "printtmp" builder);
+        value
   | TypeKind.Double ->
       let format_str = build_global_stringptr "%f\n" "float_fmt" builder in
       ignore (build_call printf_func [| format_str; value |] "printtmp" builder);
@@ -94,6 +102,11 @@ let print_any_type value llvm_type =
       value
   | TypeKind.Void -> failwith "Codegen: Cannot print void type"
   | _ -> failwith "Codegen: Unsupported type for println"
+
+let is_char_type llvm_type =
+  match classify_type llvm_type with
+  | TypeKind.Integer -> integer_bitwidth llvm_type = 8
+  | _ -> false
 
 let rec codegen_expr = function
   | Expr.IntExpr { value } -> const_int i64_type value
@@ -293,6 +306,51 @@ let rec codegen_expr = function
             (build_call printf_func [| format_str; value |] "printtmp" builder);
           value
       | _ -> print_any_type value llvm_type)
+  | Expr.PrintlnFormatExpr { format_string; arguments } ->
+      let process_format_string fmt_str args =
+        let buffer = Buffer.create 16 in
+        let llvm_args = ref [] in
+        let arg_idx = ref 0 in
+        let fmt_len = String.length fmt_str in
+        let i = ref 0 in
+
+        while !i < fmt_len do
+          if
+            !i < fmt_len - 1
+            && String.get fmt_str !i = '%'
+            && String.get fmt_str (!i + 1) = 'v'
+          then (
+            let value = codegen_expr (List.nth args !arg_idx) in
+            let llvm_type = type_of value in
+            llvm_args := !llvm_args @ [ value ];
+            incr i;
+
+            (match classify_type llvm_type with
+            | TypeKind.Integer when is_char_type llvm_type ->
+                Buffer.add_string buffer "%c"
+            | TypeKind.Integer -> Buffer.add_string buffer "%d"
+            | TypeKind.Float | TypeKind.Double -> Buffer.add_string buffer "%f"
+            | TypeKind.Pointer -> Buffer.add_string buffer "%s"
+            | _ -> Buffer.add_string buffer "%s");
+
+            incr arg_idx)
+          else Buffer.add_char buffer (String.get fmt_str !i);
+          incr i
+        done;
+
+        (Buffer.contents buffer, Array.of_list !llvm_args)
+      in
+
+      let modified_format_str, llvm_args =
+        process_format_string format_string arguments
+      in
+      let format_str =
+        build_global_stringptr (modified_format_str ^ "\n") "fmt" builder
+      in
+      let all_args = Array.append [| format_str |] llvm_args in
+
+      ignore (build_call printf_func all_args "printtmp" builder);
+      format_str
   | Expr.UnaryExpr { operator; operand } -> (
       let var_val = codegen_expr operand in
       let is_float = classify_type (type_of var_val) = TypeKind.Double in
@@ -686,4 +744,4 @@ let rec codegen_stmt = function
 
 let generate_code ast =
   ignore (codegen_stmt ast);
-  print_module "output.ll" the_module
+  print_module "a.out.ll" the_module

@@ -26,6 +26,18 @@ fn main() int {
     // if (x > 1.0) {
     //     println("Error: arcsin(x) is undefined for x < -1");
     // }
-    int x = 5 + 5.5
+    // int i = 0;
+    // println('r');
+    // int x = input("Enter x: ", int);
+    // println(x * 2);
+    // while (i < 1) {
+    //     println("hello");
+    //     i++;
+    // }
+    int n = 5 + 5;
+    string yes = "yes";
+    float y = 5.5;
+    char x = 'e';
+    println("The sum of n is: %v %v %v %v", yes, n, y, x);
     return 0;
 }

@@ -67,6 +67,8 @@ module TypeChecker : sig
   val lookup_function : env -> Env.key -> func_sig
   val lookup_variables : env -> Env.key -> Ast.Type.t
   val raise_type_mismatch_error : Ast.Type.t -> Ast.Type.t -> 'a
+  val count_format_specifiers : string -> int
+  val check_format_string_arguments : env -> string -> Ast.Expr.t list -> unit
   val check_expr : env -> Ast.Expr.t -> Ast.Type.t
   val check_enum_decl : env -> Env.key -> string list -> env
 

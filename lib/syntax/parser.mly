@@ -99,6 +99,7 @@ expr:
     | Cast LParen expr Comma type_expr RParen { Ast.Expr.CastExpr { expr = $3; target_type = $5 } }
     | Typeof LParen expr RParen { Ast.Expr.TypeofExpr { expr = $3 } }
     | Println LParen expr RParen { Ast.Expr.PrintlnExpr { expr = $3 } }
+    | Println LParen StringLit Comma argument_list RParen { Ast.Expr.PrintlnFormatExpr { format_string = $3; arguments = $5 } }
     | Length LParen expr RParen { Ast.Expr.LengthExpr { expr = $3 } }
     | Input LParen StringLit Comma type_expr RParen { Ast.Expr.InputExpr { prompt = $3; target_type = $5 } }
     | Identifier Assign expr { Ast.Expr.AssignmentExpr { identifier = $1; value = Some $3 } }

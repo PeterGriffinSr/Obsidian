@@ -175,6 +175,7 @@ module Expr = struct
     | TypeofExpr of { expr : t }
     | LengthExpr of { expr : t }
     | PrintlnExpr of { expr : t }
+    | PrintlnFormatExpr of { format_string : string; arguments : t list }
     | InputExpr of { prompt : string; target_type : Type.t }
     | NewExpr of { class_name : string }
     | MethodCall of { obj : t; method_name : string; arguments : t list }

@@ -2,7 +2,7 @@
 (using menhir 3.0)
 
 (name obsidian)
-(version 0.0.1)
+(version 0.1.0)
 (generate_opam_files true)
 (license "BSD-3-Clause")
 (authors "Codezz-ops")

@@ -44,7 +44,28 @@ module TypeChecker = struct
          ("Type mismatch: expected " ^ Type.show expected ^ ", got "
         ^ Type.show actual))
 
-  let rec check_expr env = function
+  and count_format_specifiers format_string =
+    let rec count format_string index acc =
+      if index >= String.length format_string then acc
+      else if
+        format_string.[index] = '%'
+        && index + 1 < String.length format_string
+        && format_string.[index + 1] = 'v'
+      then count format_string (index + 2) (acc + 1)
+      else count format_string (index + 1) acc
+    in
+    count format_string 0 0
+
+  let rec check_format_string_arguments env format_string arguments =
+    let num_specifiers = count_format_specifiers format_string in
+    if num_specifiers <> List.length arguments then
+      raise
+        (ArgumentMismatchError
+           "Typechecker: Number of format specifiers does not match the number \
+            of arguments");
+    List.iter (fun arg -> ignore (check_expr env arg)) arguments
+
+  and check_expr env = function
     | Expr.IntExpr _ -> Type.SymbolType { value = "int" }
     | Expr.FloatExpr _ -> Type.SymbolType { value = "float" }
     | Expr.StringExpr _ -> Type.SymbolType { value = "string" }
@@ -143,6 +164,9 @@ module TypeChecker = struct
         | _ -> raise (UnsupportedOperationError "Unsupported unary operator"))
     | Expr.PrintlnExpr { expr } ->
         let _ = check_expr env expr in
+        Type.SymbolType { value = "void" }
+    | Expr.PrintlnFormatExpr { format_string; arguments } ->
+        check_format_string_arguments env format_string arguments;
         Type.SymbolType { value = "void" }
     | Expr.LengthExpr { expr } ->
         let expr_type = check_expr env expr in

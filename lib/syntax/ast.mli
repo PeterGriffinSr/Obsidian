@@ -81,10 +81,8 @@ module Type : sig
     | PointerType of { base_type : t }
     | ArrayType of { element : t }
 
-  val pp :
-    Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
-
-  val show : t -> Ppx_deriving_runtime.string
+  val pp : Format.formatter -> t -> unit
+  val show : t -> string
 end
 
 module Expr : sig
@@ -106,6 +104,7 @@ module Expr : sig
     | TypeofExpr of { expr : t }
     | LengthExpr of { expr : t }
     | PrintlnExpr of { expr : t }
+    | PrintlnFormatExpr of { format_string : string; arguments : t list }
     | InputExpr of { prompt : string; target_type : Type.t }
     | NewExpr of { class_name : string }
     | MethodCall of { obj : t; method_name : string; arguments : t list }
@@ -113,21 +112,15 @@ module Expr : sig
     | ArrayExpr of { elements : t list }
     | IndexExpr of { array : t; index : t }
 
-  val pp :
-    Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
-
-  val show : t -> Ppx_deriving_runtime.string
+  val pp : Format.formatter -> t -> unit
+  val show : t -> string
 end
 
 module Stmt : sig
   type parameter = { name : string; param_type : Type.t }
 
-  val pp_parameter :
-    Ppx_deriving_runtime.Format.formatter ->
-    parameter ->
-    Ppx_deriving_runtime.unit
-
-  val show_parameter : parameter -> Ppx_deriving_runtime.string
+  val pp_parameter : Format.formatter -> parameter -> unit
+  val show_parameter : parameter -> string
 
   type t =
     | BlockStmt of { body : t list }
@@ -164,8 +157,6 @@ module Stmt : sig
     | ReturnStmt of Expr.t
     | BreakStmt
 
-  val pp :
-    Ppx_deriving_runtime.Format.formatter -> t -> Ppx_deriving_runtime.unit
-
-  val show : t -> Ppx_deriving_runtime.string
+  val pp : Format.formatter -> t -> unit
+  val show : t -> string
 end

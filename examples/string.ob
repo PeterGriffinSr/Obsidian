@@ -1,17 +1,18 @@
 fn strcmp(string StringOne, string StringTwo) bool {
-    return (StringOne == StringTwo) ? true : false; // However this works????
+    return (StringOne == StringTwo) ? true : false;
 }
 
 fn strcmpTwo(string StringOne, string StringTwo) bool {
     if (StringOne == StringTwo) {
-        return true; // Condtion is matched however doesn't return true
+        println("in here");
+        return true;
     }
-    return false; // Will always return false even if condition is met
+    return false;
 }
 
 fn main() int {
-    string command = input("Enter string: ", string);
-    if (strcmp(command, "Hello")) {
+    string command = "Hello";
+    if (strcmpTwo(command, "Hello")) {
         println("this works");
     } else {
         println("damn");
