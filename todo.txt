@@ -16,4 +16,5 @@ Fix that 12 byte memory leak for concat
 Fix return // Best way to describe it look in string.ob 
 Fix input for string
 Fix array indexing causes Segfaults
+Fix logical
 --------

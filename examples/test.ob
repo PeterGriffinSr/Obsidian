@@ -38,6 +38,10 @@ fn main() int {
     string yes = "yes";
     float y = 5.5;
     char x = 'e';
-    println("The sum of n is: %v %v %v %v", yes, n, y, x);
+    println("The sum of n is: %v %v %v %v", yes, n, x, y);
+    // int n = 10;
+    // if (n == 10 || n <= 10) {
+    //     println("e");
+    // }
     return 0;
 }

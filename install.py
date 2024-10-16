@@ -11,7 +11,6 @@ def run_command(command, shell=False):
 def install_linux():
     run_command(["bash", "-c", "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"])
     run_command(["opam", "init", "-y"])
-    run_command(["opam", "install", "-y", "dune", "menhir", "ppx_deriving", "odoc", "llvm14.0.6"], shell=True)
 
     if os.path.exists("/etc/debian_version"):
         package_manager = "apt"
@@ -44,6 +43,7 @@ def install_linux():
     elif package_manager == "pacman":
         run_command(["sudo", "pacman", "-Sy", "--noconfirm", "llvm14"])
 
+    run_command(["opam", "install", "-y", "dune", "menhir", "ppx_deriving", "odoc", "llvm14.0.6"], shell=True)
     print("LLVM 14.0.6 and OCaml installation completed on Linux.")
 
 def install_windows():
@@ -51,7 +51,6 @@ def install_windows():
     run_command(["winget", "install", "OCaml.opam"], shell=True)
     run_command(["opam", "init", "-y"], shell=True)
     run_command(["powershell", "(& opam env) -split '\\r?\\n' | ForEach-Object { Invoke-Expression $_ }"], shell=True)
-    run_command(["opam", "install", "-y", "dune", "menhir", "ppx_deriving", "odoc", "llvm14.0.6"], shell=True)
 
     if subprocess.run(["choco", "--version"], shell=True).returncode != 0:
         print("Chocolatey is required but not installed. Please install Chocolatey from https://chocolatey.org/install")
@@ -59,6 +58,7 @@ def install_windows():
 
     run_command(["choco", "install", "llvm", "--version=14.0.6", "-y"], shell=True)
 
+    run_command(["opam", "install", "-y", "dune", "menhir", "ppx_deriving", "odoc", "llvm14.0.6"], shell=True)
     print("LLVM 14.0.6 and OCaml installation completed on Windows.")
 
 def main():
