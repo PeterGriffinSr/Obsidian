@@ -140,7 +140,7 @@ let () =
 
   try
     let ast = Parser.program Lexer.token lexbuf in
-
+    (* Printf.printf "Parsed AST:\n%s\n" (Ast.Stmt.show ast); *)
     let initial_env = TypeChecker.empty_env in
 
     let _ =

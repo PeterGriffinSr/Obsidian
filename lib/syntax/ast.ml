@@ -66,6 +66,7 @@ type token =
   | Xor
   | Identifier of string
   | Int of int
+  | Int8 of int
   | Float of float
   | String of string
   | Char of char
@@ -141,6 +142,7 @@ let pp_token fmt = function
   | Xor -> Format.fprintf fmt "Xor"
   | Identifier s -> Format.fprintf fmt "Identifier(%s)" s
   | Int i -> Format.fprintf fmt "Int(%d)" i
+  | Int8 i -> Format.fprintf fmt "Int8(%d)" i
   | Float f -> Format.fprintf fmt "Float(%f)" f
   | String s -> Format.fprintf fmt "String(%s)" s
   | Char c -> Format.fprintf fmt "Char(%c)" c
@@ -159,6 +161,10 @@ end
 module Expr = struct
   type t =
     | IntExpr of { value : int }
+    | Int8Expr of { value : int }
+    | Int16Expr of { value : int }
+    | Int32Expr of { value : int }
+    | Float32Expr of { value : float }
     | FloatExpr of { value : float }
     | StringExpr of { value : string }
     | CharExpr of { value : char }

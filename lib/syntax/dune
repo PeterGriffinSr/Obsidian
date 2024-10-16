@@ -1,7 +1,7 @@
 (library
  (name syntax)
  (modules ast typechecker codegen lexer parser version)
- (libraries ppx_deriving.show llvm)
+ (libraries ppx_deriving.show llvm uint)
  (preprocess
   (pps ppx_deriving.show))
  (flags :standard)

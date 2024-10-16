@@ -68,6 +68,10 @@ module TypeChecker = struct
   and check_expr env = function
     | Expr.IntExpr _ -> Type.SymbolType { value = "int" }
     | Expr.FloatExpr _ -> Type.SymbolType { value = "float" }
+    | Expr.Int8Expr _ -> Type.SymbolType { value = "int8" }
+    | Expr.Int16Expr _ -> Type.SymbolType { value = "int16" }
+    | Expr.Int32Expr _ -> Type.SymbolType { value = "int32" }
+    | Expr.Float32Expr _ -> Type.SymbolType { value = "float32" }
     | Expr.StringExpr _ -> Type.SymbolType { value = "string" }
     | Expr.CharExpr _ -> Type.SymbolType { value = "char" }
     | Expr.BoolExpr _ -> Type.SymbolType { value = "bool" }
@@ -85,6 +89,10 @@ module TypeChecker = struct
               match left_type with
               | Type.SymbolType { value = "int" }
               | Type.SymbolType { value = "float" }
+              | Type.SymbolType { value = "int8" }
+              | Type.SymbolType { value = "int16" }
+              | Type.SymbolType { value = "int32" }
+              | Type.SymbolType { value = "float32" }
               | Type.SymbolType { value = "string" } ->
                   Type.SymbolType { value = "bool" }
               | _ ->
@@ -149,18 +157,23 @@ module TypeChecker = struct
             if
               operand_type = Ast.Type.SymbolType { value = "int" }
               || operand_type = Ast.Type.SymbolType { value = "float" }
+              || operand_type = Ast.Type.SymbolType { value = "int8" }
+              || operand_type = Ast.Type.SymbolType { value = "int16" }
+              || operand_type = Ast.Type.SymbolType { value = "int32" }
+              || operand_type = Ast.Type.SymbolType { value = "float32" }
             then operand_type
             else
-              raise
-                (TypeError "Typechecker: INC/DEC requires int or float operand")
+              raise (TypeError "Typechecker: INC/DEC requires numeric operand")
         | Ast.Minus ->
             if
               operand_type = Ast.Type.SymbolType { value = "int" }
               || operand_type = Ast.Type.SymbolType { value = "float" }
+              || operand_type = Ast.Type.SymbolType { value = "int8" }
+              || operand_type = Ast.Type.SymbolType { value = "int16" }
+              || operand_type = Ast.Type.SymbolType { value = "int32" }
+              || operand_type = Ast.Type.SymbolType { value = "float32" }
             then operand_type
-            else
-              raise
-                (TypeError "Typechecker: MINUS requires int or float operand")
+            else raise (TypeError "Typechecker: MINUS requires numeric operand")
         | _ -> raise (UnsupportedOperationError "Unsupported unary operator"))
     | Expr.PrintlnExpr { expr } ->
         let _ = check_expr env expr in
@@ -179,6 +192,15 @@ module TypeChecker = struct
         match (source_type, target_type) with
         | Type.SymbolType { value = "int" }, Type.SymbolType { value = "float" }
         | Type.SymbolType { value = "float" }, Type.SymbolType { value = "int" }
+        | ( Type.SymbolType { value = "int8" },
+            Type.SymbolType { value = "int16" } )
+        | ( Type.SymbolType { value = "int16" },
+            Type.SymbolType { value = "int32" } )
+        | Type.SymbolType { value = "int32" }, Type.SymbolType { value = "int" }
+        | ( Type.SymbolType { value = "int" },
+            Type.SymbolType { value = "float32" } )
+        | ( Type.SymbolType { value = "float32" },
+            Type.SymbolType { value = "int32" } )
         | ( Type.SymbolType { value = "int" },
             Type.SymbolType { value = "string" } )
         | ( Type.SymbolType { value = "float" },
@@ -204,7 +226,11 @@ module TypeChecker = struct
         | Ast.Type.SymbolType { value = "float" }
         | Ast.Type.SymbolType { value = "char" }
         | Ast.Type.SymbolType { value = "string" }
-        | Ast.Type.SymbolType { value = "bool" } ->
+        | Ast.Type.SymbolType { value = "bool" }
+        | Ast.Type.SymbolType { value = "int8" }
+        | Ast.Type.SymbolType { value = "int16" }
+        | Ast.Type.SymbolType { value = "int32" }
+        | Ast.Type.SymbolType { value = "float32" } ->
             Type.SymbolType { value = "int" }
         | _ ->
             raise
@@ -215,6 +241,10 @@ module TypeChecker = struct
         | Type.SymbolType { value = "int" }
         | Type.SymbolType { value = "float" }
         | Type.SymbolType { value = "char" }
+        | Ast.Type.SymbolType { value = "int8" }
+        | Ast.Type.SymbolType { value = "int16" }
+        | Ast.Type.SymbolType { value = "int32" }
+        | Ast.Type.SymbolType { value = "float32" }
         | Type.SymbolType { value = "string" } ->
             target_type
         | _ -> raise (TypeError "Typechecker: Unsupported type for input"))

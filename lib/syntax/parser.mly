@@ -2,11 +2,11 @@
 %left Star Slash Percent
 %left Power
 
-%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input PlusAssign MinusAssign StarAssign SlashAssign Pipe Leftshift Rightshift Xor Question
+%token Int Int8 Int16 Int32 Float Float32 String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input PlusAssign MinusAssign StarAssign SlashAssign Pipe Leftshift Rightshift Xor Question
 
 %token <string> Identifier
-%token <int> IntLit
-%token <float> FloatLit
+%token <int> IntLit Int8Lit Int16Lit Int32Lit
+%token <float> FloatLit Float32Lit
 %token <string> StringLit
 %token <char> CharLit
 %token <bool> BoolLit
@@ -46,7 +46,11 @@ compound_stmt:
 
 type_expr:
     | Int { Ast.Type.SymbolType { value = "int" } }
+    | Int8 { Ast.Type.SymbolType { value = "int8" } }
+    | Int16 { Ast.Type.SymbolType { value = "int16" } }
+    | Int32 { Ast.Type.SymbolType { value = "int32" } }
     | Float { Ast.Type.SymbolType { value = "float" } }
+    | Float32 { Ast.Type.SymbolType { value = "float32" } }
     | String { Ast.Type.SymbolType { value = "string" } }
     | Char { Ast.Type.SymbolType { value = "char" } }
     | Bool { Ast.Type.SymbolType { value = "bool" } }
@@ -87,7 +91,11 @@ expr:
     | Minus FloatLit { Ast.Expr.FloatExpr { value = -. $2 } }
     | Minus Identifier { Ast.Expr.UnaryExpr { operator = Ast.Minus; operand = Ast.Expr.VarExpr $2 } }
     | IntLit { Ast.Expr.IntExpr { value = $1 } }
+    | Int8Lit { Ast.Expr.Int8Expr { value = $1 } }
+    | Int16Lit { Ast.Expr.Int16Expr { value = $1 } }
+    | Int32Lit { Ast.Expr.Int32Expr { value = $1 } }
     | FloatLit { Ast.Expr.FloatExpr { value = $1 } }
+    | Float32Lit { Ast.Expr.Float32Expr { value = $1 } }
     | StringLit { Ast.Expr.StringExpr { value = $1 } }
     | CharLit { Ast.Expr.CharExpr { value = $1 } }
     | BoolLit { Ast.Expr.BoolExpr { value = $1 } }

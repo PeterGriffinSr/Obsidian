@@ -34,14 +34,17 @@ fn main() int {
     //     println("hello");
     //     i++;
     // }
-    int n = 5 + 5;
-    string yes = "yes";
-    float y = 5.5;
-    char x = 'e';
-    println("The sum of n is: %v %v %v %v", yes, n, x, y);
+    // int n = 5 + 5;
+    // string yes = "yes";
+    // float y = 5.5;
+    // char x = 'e';
+    // println("The sum of n is: %v %v %v %v", yes, n, x, y);
+    // println("Hello world! %v", 5);
     // int n = 10;
     // if (n == 10 || n <= 10) {
     //     println("e");
     // }
+    int32 x = 6;
+    println(typeof(x));
     return 0;
 }

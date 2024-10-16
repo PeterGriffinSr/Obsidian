@@ -66,6 +66,7 @@ type token =
   | Xor
   | Identifier of string
   | Int of int
+  | Int8 of int
   | Float of float
   | String of string
   | Char of char
@@ -88,6 +89,10 @@ end
 module Expr : sig
   type t =
     | IntExpr of { value : int }
+    | Int8Expr of { value : int }
+    | Int16Expr of { value : int }
+    | Int32Expr of { value : int }
+    | Float32Expr of { value : float }
     | FloatExpr of { value : float }
     | StringExpr of { value : string }
     | CharExpr of { value : char }
@@ -104,21 +109,11 @@ module Expr : sig
     | TypeofExpr of { expr : t }
     | LengthExpr of { expr : t }
     | PrintlnExpr of { expr : t }
-    | PrintlnFormatExpr of {
-        format_string : string;
-        arguments : t list;
-      }
+    | PrintlnFormatExpr of { format_string : string; arguments : t list }
     | InputExpr of { prompt : string; target_type : Type.t }
     | NewExpr of { class_name : string }
-    | MethodCall of {
-        obj : t;
-        method_name : string;
-        arguments : t list;
-      }
-    | AssignmentExpr of {
-        identifier : string;
-        value : t option;
-      }
+    | MethodCall of { obj : t; method_name : string; arguments : t list }
+    | AssignmentExpr of { identifier : string; value : t option }
     | ArrayExpr of { elements : t list }
     | IndexExpr of { array : t; index : t }
 
@@ -147,11 +142,7 @@ module Stmt : sig
         body : t list;
       }
     | WhileStmt of { expr : Expr.t; body : t list }
-    | IfStmt of {
-        condition : Expr.t;
-        then_branch : t;
-        else_branch : t option;
-      }
+    | IfStmt of { condition : Expr.t; then_branch : t; else_branch : t option }
     | SwitchStmt of {
         expr : Expr.t;
         cases : (Expr.t * t list) list;

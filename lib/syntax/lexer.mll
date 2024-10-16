@@ -21,9 +21,9 @@
     t
 }
 
-let Identifier = ['a'-'z' 'A'-'Z']*
 let Digits = ['0'-'9']+
-let Floats = Digits '.' Digits+
+let Identifier = ['a'-'z' 'A'-'Z' '_']['a'-'z' 'A'-'Z' '_' '0'-'9']*
+let Floats = ['0'-'9']+ '.' ['0'-'9']+
 
 rule token = parse
     | [' ' '\t']        { update_column (); token lexbuf }
@@ -31,7 +31,11 @@ rule token = parse
     | "//"              { read_comment lexbuf }
 
     | "int"                 { ignore (update_column_with_lexeme lexbuf); Int }
+    | "int8"                { ignore (update_column_with_lexeme lexbuf); Int8 }
+    | "int16"               { ignore (update_column_with_lexeme lexbuf); Int16}
+    | "int32"               { ignore (update_column_with_lexeme lexbuf); Int32 }
     | "float"               { ignore (update_column_with_lexeme lexbuf); Float }
+    | "float32"             { ignore (update_column_with_lexeme lexbuf); Float32 }
     | "string"              { ignore (update_column_with_lexeme lexbuf); String }
     | "char"                { ignore (update_column_with_lexeme lexbuf); Char }
     | "bool"                { ignore (update_column_with_lexeme lexbuf); Bool }

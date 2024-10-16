@@ -1,18 +1,10 @@
 fn strcmp(string StringOne, string StringTwo) bool {
-    return (StringOne == StringTwo) ? true : false;
-}
-
-fn strcmpTwo(string StringOne, string StringTwo) bool {
-    if (StringOne == StringTwo) {
-        println("in here");
-        return true;
-    }
-    return false;
+    return StringOne == StringTwo;
 }
 
 fn main() int {
     string command = "Hello";
-    if (strcmpTwo(command, "Hello")) {
+    if (strcmp(command, "Hello")) {
         println("this works");
     } else {
         println("damn");

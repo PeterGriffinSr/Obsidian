@@ -62,7 +62,11 @@ let declare_malloc_function _context the_module =
 
 let type_size_in_bytes = function
   | Ast.Type.SymbolType { value = "int" } -> 8
+  | Ast.Type.SymbolType { value = "int8" } -> 1
+  | Ast.Type.SymbolType { value = "int16" } -> 2
+  | Ast.Type.SymbolType { value = "int32" } -> 4
   | Ast.Type.SymbolType { value = "float" } -> 8
+  | Ast.Type.SymbolType { value = "float32" } -> 4
   | Ast.Type.SymbolType { value = "char" } -> 1
   | Ast.Type.SymbolType { value = "string" } -> 8
   | Ast.Type.SymbolType { value = "bool" } -> 1
@@ -70,11 +74,17 @@ let type_size_in_bytes = function
 
 let string_of_llvm_type llvm_type =
   match classify_type llvm_type with
-  | TypeKind.Integer -> "int"
+  | TypeKind.Integer -> (
+      match integer_bitwidth llvm_type with
+      | 8 -> "int8"
+      | 16 -> "int16"
+      | 32 -> "int32"
+      | 64 -> "int"
+      | _ -> "int")
   | TypeKind.Double -> "float"
+  | TypeKind.Float -> "float32"
   | TypeKind.Pointer -> "string"
   | TypeKind.Void -> "void"
-  | TypeKind.Float -> "float"
   | TypeKind.Function -> "function"
   | _ -> "unknown"
 
@@ -88,7 +98,7 @@ let print_any_type value llvm_type =
           (build_call printf_func [| format_str; value |] "printtmp" builder);
         value)
       else
-        let format_str = build_global_stringptr "%ld\n" "int_fmt" builder in
+        let format_str = build_global_stringptr "%d\n" "int_fmt" builder in
         ignore
           (build_call printf_func [| format_str; value |] "printtmp" builder);
         value
@@ -494,7 +504,11 @@ let rec codegen_stmt = function
       let llvm_type =
         match explicit_type with
         | Ast.Type.SymbolType { value = "int" } -> i64_type
+        | Ast.Type.SymbolType { value = "int8" } -> i8_type context
+        | Ast.Type.SymbolType { value = "int16" } -> i16_type context
+        | Ast.Type.SymbolType { value = "int32" } -> i32_type context
         | Ast.Type.SymbolType { value = "float" } -> f64_type
+        | Ast.Type.SymbolType { value = "float32" } -> float_type context
         | Ast.Type.SymbolType { value = "char" } -> char_type
         | Ast.Type.SymbolType { value = "string" } -> string_type
         | Ast.Type.SymbolType { value = "bool" } -> i1_type
