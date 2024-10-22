@@ -11,10 +11,9 @@ Add Array Slicing
 
 Need to fix
 --------
-Fix Recursion // Segfaults don't know why tho
+Fix Tail Recursion // Segfaults don't know why tho
 Fix that 12 byte memory leak for concat
-Fix return // Best way to describe it look in string.ob 
-Fix input for string
+Fix input for string // I need to null terminate inputted strings aka \0
 Fix array indexing causes Segfaults
 Fix logical
 --------

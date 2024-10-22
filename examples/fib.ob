@@ -12,7 +12,6 @@ fn fib(int n) int {
         b = temp;
     }
     return b;
-    // return fib(n - 1) + fib(n - 2);
 }
 
 fn main() int {
