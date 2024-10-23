@@ -69,10 +69,10 @@ Check out our [full roadmap](/docs/project/roadmap.md) for more details.
 ## Obsidian vs. C++
 
 <p align="center">
-  <a href="docs/images/snippets.md#c" style="display: inline-block; margin-right: 10px;">
+  <a href="docs/snippets.md#c" style="display: inline-block; margin-right: 10px;">
     <img src="docs/images/cpp_snippet.png" width="375" alt="A snippet of C++ code. Follow the link to read it." style="vertical-align: top;">
   </a>
-  <a href="docs/images/snippets.md#obsidian" style="display: inline-block; margin-left: 10px;">
+  <a href="docs/snippets.md#obsidian" style="display: inline-block; margin-left: 10px;">
     <img src="docs/images/obsidian_snippet.png" width="375" alt="A snippet of Obsidian code. Follow the link to read it." style="vertical-align: top;">
   </a>
 </p>
