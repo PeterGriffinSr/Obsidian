@@ -1,4 +1,4 @@
-open Syntax
+open Obsidianlib
 open Typechecker
 
 let print_help () =

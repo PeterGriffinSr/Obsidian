@@ -1,12 +1,18 @@
 (library
  (name obsidianlib)
- (libraries syntax)
+ (modules ast typechecker codegen lexer parser version)
+ (libraries ppx_deriving.show llvm)
  (preprocess
   (pps ppx_deriving.show))
  (flags :standard)
  (modes native))
 
 (documentation)
+
+(ocamllex lexer)
+
+(menhir
+ (modules parser))
 
 (env
  (dev
