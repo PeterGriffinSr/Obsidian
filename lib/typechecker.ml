@@ -16,6 +16,7 @@ module TypeChecker = struct
     var_type : Type.t Env.t;
     func_type : func_sig Env.t;
     enum_type : (string * Type.t) list Env.t;
+    struct_types : (string * (string * Type.t) list) Env.t;
   }
 
   let empty_env =
@@ -26,6 +27,7 @@ module TypeChecker = struct
       var_type = Env.empty;
       func_type = Env.add "println" println_sig Env.empty;
       enum_type = Env.empty;
+      struct_types = Env.empty;
     }
 
   let lookup_function env name =
@@ -55,6 +57,19 @@ module TypeChecker = struct
       else count format_string (index + 1) acc
     in
     count format_string 0 0
+
+  let rec is_valid_type env = function
+    | Type.SymbolType { value } -> (
+        match value with
+        | "int" | "float" | "string" | "char" | "bool" | "void" -> true
+        | _ -> Env.mem value env.struct_types || Env.mem value env.enum_type)
+    | Type.ArrayType { element } -> is_valid_type env element
+    | _ -> false
+
+  let check_struct_decl env (name, fields) =
+    if Env.mem name env.struct_types then
+      raise (TypeError ("Struct " ^ name ^ " is already defined"));
+    { env with struct_types = Env.add name fields env.struct_types }
 
   let rec check_format_string_arguments env format_string arguments =
     let num_specifiers = count_format_specifiers format_string in
@@ -115,6 +130,31 @@ module TypeChecker = struct
             raise
               (UnsupportedOperationError
                  "Typechecker: Unsupported operator in binary expression"))
+    | Expr.FieldAccess { object_name; member_name } -> (
+        match Env.find_opt object_name env.struct_types with
+        | Some (_, fields) -> (
+            match List.assoc_opt member_name fields with
+            | Some field_type -> field_type
+            | None ->
+                raise
+                  (TypeError
+                     ("Typechecker: Field '" ^ member_name
+                    ^ "' not found in struct '" ^ object_name ^ "'")))
+        | None -> (
+            match Env.find_opt object_name env.enum_type with
+            | Some members -> (
+                match List.assoc_opt member_name members with
+                | Some enum_type -> enum_type
+                | None ->
+                    raise
+                      (TypeError
+                         ("Typechecker: Enum member '" ^ member_name
+                        ^ "' not found in enum '" ^ object_name ^ "'")))
+            | None ->
+                raise
+                  (TypeError
+                     ("Typechecker: '" ^ object_name
+                    ^ "' is neither a struct nor an enum"))))
     | Expr.VarExpr name -> lookup_variables env name
     | Expr.CallExpr { callee; arguments } ->
         let func_name =
@@ -255,6 +295,26 @@ module TypeChecker = struct
         let false_type = check_expr env onFalse in
         if true_type = false_type then true_type
         else raise_type_mismatch_error true_type false_type
+    | Expr.StructFieldAssign { struct_name; field_name; value } ->
+        let struct_info =
+          try Env.find struct_name env.struct_types
+          with Not_found ->
+            raise (TypeError ("Undefined struct type: " ^ struct_name))
+        in
+        let _, fields = struct_info in
+        let field_type =
+          match List.assoc_opt field_name fields with
+          | Some t -> t
+          | None ->
+              raise
+                (TypeError
+                   ("Undefined field " ^ field_name ^ " in struct "
+                  ^ struct_name))
+        in
+        let value_type = check_expr env value in
+        if value_type <> field_type then
+          raise_type_mismatch_error field_type value_type;
+        Type.SymbolType { value = struct_name }
     | _ ->
         raise (UnsupportedOperationError "Typechecker: Unsupported expression")
 
@@ -291,7 +351,12 @@ module TypeChecker = struct
     let func_sig = { param_type; return_type } in
     let func_type = Env.add name func_sig env.func_type in
     let new_env =
-      { var_type = var_env; func_type; enum_type = env.enum_type }
+      {
+        var_type = var_env;
+        func_type;
+        enum_type = env.enum_type;
+        struct_types = env.struct_types;
+      }
     in
     let _ = check_block new_env body ~expected_return_type:(Some return_type) in
     { env with func_type }
@@ -385,6 +450,8 @@ module TypeChecker = struct
         in
         check_block env body ~expected_return_type
     | Stmt.EnumDeclStmt { name; members } -> check_enum_decl env name members
+    | Stmt.StructStmt { name; fields; priv = _ } ->
+        check_struct_decl env (name, fields)
     | _ ->
         raise (UnsupportedOperationError "Typechecker: Unsupported statement")
 

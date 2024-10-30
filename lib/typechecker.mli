@@ -61,6 +61,7 @@ module TypeChecker : sig
     var_type : Ast.Type.t Env.t;
     func_type : func_sig Env.t;
     enum_type : (string * Ast.Type.t) list Env.t;
+    struct_types : (string * (string * Ast.Type.t) list) Env.t;
   }
 
   val empty_env : env
@@ -68,6 +69,11 @@ module TypeChecker : sig
   val lookup_variables : env -> Env.key -> Ast.Type.t
   val raise_type_mismatch_error : Ast.Type.t -> Ast.Type.t -> 'a
   val count_format_specifiers : string -> int
+  val is_valid_type : env -> Ast.Type.t -> bool
+
+  val check_struct_decl :
+    env -> Env.key * (string * (string * Ast.Type.t) list) -> env
+
   val check_format_string_arguments : env -> string -> Ast.Expr.t list -> unit
   val check_expr : env -> Ast.Expr.t -> Ast.Type.t
   val check_enum_decl : env -> Env.key -> string list -> env

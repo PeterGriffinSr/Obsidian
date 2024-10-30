@@ -1,0 +1,18 @@
+fn createPerson(string name, int age) void {
+    struct NewPerson {
+        string name
+        int age
+    }
+
+    NewPerson.name = name;
+    NewPerson.age = age;
+
+    println(NewPerson.name);
+    println(NewPerson.age);
+}
+
+fn main() int {
+    createPerson("azlo", 19);
+    createPerson("john", 10);
+    return 0;
+}

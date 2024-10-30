@@ -1,0 +1,13 @@
+fn main() int {
+    enum Week {
+        Monday,
+        Tuesday,
+        Wednesday,
+        Thursday,
+        Friday
+    }
+
+    println(Week.Friday); // prints 4
+
+    return 0;
+}

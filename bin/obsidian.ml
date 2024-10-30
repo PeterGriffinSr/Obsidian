@@ -130,8 +130,7 @@ let () =
   Arg.parse speclist (fun s -> file_name := s) "Options:";
 
   if !file_name = "" then (
-    Printf.eprintf "Error: No input file provided\n";
-    print_help ();
+    Printf.eprintf "obsidian: error: no input files\n";
     exit 1);
 
   let filename = !file_name in
@@ -140,6 +139,7 @@ let () =
 
   try
     let ast = Parser.program Lexer.token lexbuf in
+    Printf.printf "Parsed AST: %s\n" (Ast.Stmt.show ast);
 
     let initial_env = TypeChecker.empty_env in
 

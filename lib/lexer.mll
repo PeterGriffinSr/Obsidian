@@ -47,7 +47,7 @@ rule token = parse
     | "while"               { ignore (update_column_with_lexeme lexbuf); While }
     | "for"                 { ignore (update_column_with_lexeme lexbuf); For }
     | "return"              { ignore (update_column_with_lexeme lexbuf); Return }
-    | "class"               { ignore (update_column_with_lexeme lexbuf); Class }
+    | "struct"              { ignore (update_column_with_lexeme lexbuf); Struct }
     | "enum"                { ignore (update_column_with_lexeme lexbuf); Enum }
     | "new"                 { ignore (update_column_with_lexeme lexbuf); New }
     | "null"                { ignore (update_column_with_lexeme lexbuf); Null }
@@ -57,7 +57,6 @@ rule token = parse
     | "dealloc"             { ignore (update_column_with_lexeme lexbuf); Dealloc }
     | "sizeof"              { ignore (update_column_with_lexeme lexbuf); Sizeof }
     | "unsafe"              { ignore (update_column_with_lexeme lexbuf); Unsafe }
-    | "public"              { ignore (update_column_with_lexeme lexbuf); Public }
     | "private"             { ignore (update_column_with_lexeme lexbuf); Private }
     | "typeof"              { ignore (update_column_with_lexeme lexbuf); Typeof }
     | "import"              { ignore (update_column_with_lexeme lexbuf); Import }
@@ -66,6 +65,7 @@ rule token = parse
     | "println"             { ignore (update_column_with_lexeme lexbuf); Println }
     | "input"               { ignore (update_column_with_lexeme lexbuf); Input }
     | "len"                 { ignore (update_column_with_lexeme lexbuf); Length }
+    | "break"               { ignore (update_column_with_lexeme lexbuf); Break }
 
     | "("                   { token_and_update_column LParen lexbuf }
     | ")"                   { token_and_update_column RParen lexbuf }

@@ -111,6 +111,12 @@ module Expr : sig
     | AssignmentExpr of { identifier : string; value : t option }
     | ArrayExpr of { elements : t list }
     | IndexExpr of { array : t; index : t }
+    | StructFieldAssign of {
+        struct_name : string;
+        field_name : string;
+        value : t;
+      }
+    | FieldAccess of { object_name : string; member_name : string }
 
   val pp : Format.formatter -> t -> unit
   val show : t -> string
@@ -153,6 +159,11 @@ module Stmt : sig
     | UnsafeStmt of { body : t list }
     | ImportStmt of { module_name : string }
     | ExportStmt of { identifier : string }
+    | StructStmt of {
+        name : string;
+        fields : string * (string * Type.t) list;
+        priv : bool;
+      }
     | ExprStmt of Expr.t
     | ReturnStmt of Expr.t
     | BreakStmt

@@ -2,7 +2,7 @@
 %left Star Slash Percent
 %left Power
 
-%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Class Enum New Null Alloc Dealloc Sizeof Unsafe Public Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast This Println Length Input PlusAssign MinusAssign StarAssign SlashAssign Pipe Leftshift Rightshift Xor Question
+%token Int Float String Bool Char Void Const Fn If Else Switch Case Default Break While For Return Enum New Null Alloc Dealloc Sizeof Unsafe Private Typeof Import Export LParen RParen LBrace RBrace LBracket RBracket Comma Dot Semi Colon Plus Minus Star Slash Percent Not Assign Less Greater Ampersand Carot Neq Eq Leq Geq LogicalAnd LogicalOr Inc Dec Power Cast Println Length Input PlusAssign MinusAssign StarAssign SlashAssign Pipe Leftshift Rightshift Xor Question Struct
 
 %token <string> Identifier
 %token <int> IntLit
@@ -43,6 +43,7 @@ compound_stmt:
     | ForStmt { $1 }
     | EnumStmt { $1 }
     | UnsafeStmt { $1 }
+    | StructStmt { $1 }
 
 type_expr:
     | Int { Ast.Type.SymbolType { value = "int" } }
@@ -106,10 +107,12 @@ expr:
     | LBrace RBrace { Ast.Expr.ArrayExpr { elements = [] } }
     | LBrace expr_list RBrace { Ast.Expr.ArrayExpr { elements = $2 } }
     | Identifier LBracket expr RBracket { Ast.Expr.IndexExpr { array = Ast.Expr.VarExpr $1; index = $3 } }
+    | Identifier Dot Identifier Assign expr { Ast.Expr.StructFieldAssign { struct_name = $1; field_name = $3; value = $5 } }
     | expr PlusAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.PlusAssign; right = $3 } }
     | expr MinusAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.MinusAssign; right = $3 } }
     | expr StarAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.StarAssign; right = $3 } }
     | expr SlashAssign expr { Ast.Expr.BinaryExpr { left = $1; operator = Ast.SlashAssign; right = $3 } }
+    | Identifier Dot Identifier { Ast.Expr.FieldAccess { object_name = $1; member_name = $3 } }
     | LParen expr RParen Question expr Colon expr { Ast.Expr.TernaryExpr { cond = $2; onTrue = $5; onFalse = $7; } }
 
 parameter:
@@ -155,6 +158,13 @@ expr_list:
     | expr { [$1] }
     | { [] }
 
+var_decl:
+    | type_expr Identifier { ($2, $1) }
+
+var_decl_list:
+    | { [] }
+    | var_decl var_decl_list { $1 :: $2 }
+
 VarDeclStmt:
     | type_expr Star Identifier Assign expr { Ast.Stmt.VarDeclarationStmt { identifier = $3; constant = false; assigned_value = Some $5; explicit_type = Ast.Type.PointerType { base_type = $1 }; } }
     | type_expr Identifier Assign expr { Ast.Stmt.VarDeclarationStmt { identifier = $2; constant = false; assigned_value = Some $4; explicit_type = $1; } }
@@ -191,3 +201,9 @@ ImportStmt:
 
 ExportStmt:
     | Export Identifier { Ast.Stmt.ExportStmt { identifier = $2 } }
+
+StructStmt:
+    | Struct LBrace var_decl_list RBrace Identifier { Ast.Stmt.StructStmt { name = $5; fields = ($5, $3); priv = false } }
+    | Struct Identifier LBrace var_decl_list RBrace { Ast.Stmt.StructStmt { name = $2; fields = ($2, $4); priv = false } }
+    | Private Struct LBrace var_decl_list RBrace Identifier { Ast.Stmt.StructStmt { name = $6; fields = ($6, $4); priv = true } }
+    | Private Struct Identifier LBrace var_decl_list RBrace { Ast.Stmt.StructStmt { name = $3; fields = ($3, $5); priv = true } }

@@ -13,9 +13,9 @@
  (synopsis "A Programming Language")
  (description "A Programming Language")
  (depends
-  (ocaml (>= 4.14.4))
+  (ocaml (>= 4.14.2))
   "dune"
   "menhir"
-  (llvm (>= 14.0.6))
+  (llvm (= 14.0.6))
   "ppx_deriving"
   "odoc"))

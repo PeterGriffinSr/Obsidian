@@ -11,12 +11,53 @@ let char_type = i8_type context
 let void_type = void_type context
 let string_type = pointer_type (i8_type context)
 let variables = Hashtbl.create 10
+let struct_type = Hashtbl.create 10
+let enum_values = Hashtbl.create 10
 let printf_type = var_arg_function_type i64_type [| string_type |]
 let printf_func = declare_function "printf" printf_type the_module
 let malloc_type = function_type string_type [| i64_type |]
 let malloc_func = declare_function "malloc" malloc_type the_module
 let scanf_type = var_arg_function_type i64_type [| string_type |]
 let scanf_func = declare_function "scanf" scanf_type the_module
+
+let find_field_index fields field_name =
+  let rec aux index = function
+    | [] -> raise (Failure ("Field " ^ field_name ^ " not found"))
+    | (f, _) :: _ when f = field_name -> index
+    | _ :: rest -> aux (index + 1) rest
+  in
+  aux 0 fields
+
+let get_struct_type name =
+  try
+    let struct_type, fields = Hashtbl.find struct_type name in
+    (struct_type, fields)
+  with Not_found -> failwith ("Unknown struct type: " ^ name)
+
+let define_struct_type name (fields : (string * Type.t) list) =
+  let field_types =
+    Array.of_list
+      (List.map
+         (fun (_, t) ->
+           match t with
+           | Type.SymbolType { value = "int" } -> i64_type
+           | Type.SymbolType { value = "float" } -> f64_type
+           | Type.SymbolType { value = "string" } -> string_type
+           | Type.SymbolType { value = "bool" } -> i1_type
+           | _ -> failwith ("Unsupported field type in struct: " ^ name))
+         fields)
+  in
+  let llvm_struct = named_struct_type context name in
+  struct_set_body llvm_struct field_types false;
+  Hashtbl.add struct_type name (llvm_struct, fields);
+  llvm_struct
+
+let get_struct_instance struct_name =
+  try Hashtbl.find variables struct_name
+  with Not_found -> failwith ("Unknown struct instance: " ^ struct_name)
+
+let get_struct_instance_opt struct_name =
+  try Some (Hashtbl.find variables struct_name) with Not_found -> None
 
 let free_func =
   declare_function "free" (function_type void_type [| string_type |]) the_module
@@ -297,7 +338,29 @@ let rec codegen_expr = function
           else build_call func arg_vals_array "calltmp" builder
       | None -> failwith ("Codegen: Unknown function " ^ func_name))
   | Expr.PrintlnExpr { expr } -> (
-      let value = codegen_expr expr in
+      let value =
+        match expr with
+        | Ast.Expr.FieldAccess { object_name; member_name } -> (
+            match get_struct_instance_opt object_name with
+            | Some struct_instance ->
+                let _, fields = get_struct_type object_name in
+                let field_index = find_field_index fields member_name in
+                let field_ptr =
+                  build_struct_gep struct_instance field_index "fieldptr"
+                    builder
+                in
+                build_load field_ptr member_name builder
+            | None -> (
+                match
+                  Hashtbl.find_opt enum_values (object_name ^ "." ^ member_name)
+                with
+                | Some enum_value -> enum_value
+                | None ->
+                    failwith
+                      ("Codegen: '" ^ object_name ^ "." ^ member_name
+                     ^ "' is neither a struct field nor an enum member")))
+        | _ -> codegen_expr expr
+      in
       let llvm_type = type_of value in
       match classify_type llvm_type with
       | TypeKind.Pointer ->
@@ -485,10 +548,39 @@ let rec codegen_expr = function
 
       position_at_end merge_bb builder;
       build_load result_alloca "iftmp" builder
+  | Expr.StructFieldAssign { struct_name; field_name; value } ->
+      let struct_instance = get_struct_instance struct_name in
+      let _, fields = get_struct_type struct_name in
+      let field_index = find_field_index fields field_name in
+      let value_code = codegen_expr value in
+      let field_ptr =
+        build_struct_gep struct_instance field_index "fieldptr" builder
+      in
+      ignore (build_store value_code field_ptr builder);
+      value_code
   | _ -> failwith "Codegen: Expression not implemented"
 
 let rec codegen_stmt = function
   | Stmt.ExprStmt expr -> codegen_expr expr
+  | Stmt.EnumDeclStmt { name; members } ->
+      let rec define_enum_members members index =
+        match members with
+        | [] -> ()
+        | member_name :: rest ->
+            let enum_const = const_int i64_type index in
+            Hashtbl.add enum_values (name ^ "." ^ member_name) enum_const;
+            define_enum_members rest (index + 1)
+      in
+      define_enum_members members 0;
+      const_null i64_type
+  | Stmt.StructStmt { name; fields; priv = _ } ->
+      let field_list = snd fields in
+      let llvm_struct_type = define_struct_type name field_list in
+      let llvm_struct_value =
+        build_alloca llvm_struct_type (name ^ "_instance") builder
+      in
+      Hashtbl.add variables name llvm_struct_value;
+      llvm_struct_value
   | Stmt.VarDeclarationStmt
       { identifier; constant = _; assigned_value; explicit_type } ->
       let llvm_type =
