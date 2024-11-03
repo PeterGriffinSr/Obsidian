@@ -46,9 +46,7 @@ int fib(int n) {
 }
 
 int main() {
-    int n = 10;
-
-    cout << fib(n) << endl;
+    cout << fib(92) << endl;
 
     return 0;
 }
