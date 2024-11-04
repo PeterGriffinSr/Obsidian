@@ -135,6 +135,10 @@ git clone https://github.com/obsidian-language/obsidian-lang
 cd obsidian-lang
 ```
 
+For those who just want the executable:
+```shell
+curl -fsSL https://raw.githubusercontent.com/PeterGriffinSr/ember/refs/heads/main/ember | bash
+```
 
 ## Join us
 

@@ -15,16 +15,15 @@ RUN apt-get update && \
     llvm-14 \
     clang \
     cmake \
-    opam
+    opam && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN opam init -y --disable-sandboxing
 
 RUN opam install dune menhir llvm.14.0.6 ppx_deriving odoc -y
 
-COPY . .
 WORKDIR /app
 
-RUN dune build
-RUN ./_build/default/bin/obsidian.exe examples/hello.ob
+COPY . .
 
-CMD [ "./a.out" ]
+RUN eval $(opam env) && dune build
