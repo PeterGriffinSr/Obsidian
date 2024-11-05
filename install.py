@@ -8,6 +8,12 @@ def run_command(command, shell=False):
         print(f"Command {' '.join(command)} failed.")
         sys.exit(1)
 
+def install_darwin():
+    run_command(["bash", "-c", "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"])
+    run_command(["opam", "init", "-y"])
+    run_command(["brew", "install", "llvm@14"])
+    run_command(["opam", "install", "-y", "dune", "menhir", "ppx_deriving", "odoc", "llvm14.0.6"], shell=True)
+
 def install_linux():
     run_command(["bash", "-c", "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"])
     run_command(["opam", "init", "-y"])
@@ -66,6 +72,8 @@ def main():
         install_linux()
     elif sys.platform.startswith('win'):
         install_windows()
+    elif sys.platform.startswith('darwin'):
+        install_darwin()
     else:
         print(f"Unsupported platform: {sys.platform}")
         sys.exit(1)
