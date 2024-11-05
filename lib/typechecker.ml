@@ -110,8 +110,8 @@ module TypeChecker = struct
             else raise_type_mismatch_error left_type right_type
         | LogicalAnd | LogicalOr ->
             (* Printf.printf "Evaluating left operand: %s\n" (Type.show left_type);
-            Printf.printf "Evaluating right operand: %s\n"
-              (Type.show right_type); *)
+               Printf.printf "Evaluating right operand: %s\n"
+                 (Type.show right_type); *)
             if
               left_type = Type.SymbolType { value = "bool" }
               && right_type = Type.SymbolType { value = "bool" }
