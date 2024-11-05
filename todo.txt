@@ -5,13 +5,15 @@ Add Dealloc
 Add Import/Export
 Add Unsafe
 Add Array Slicing
+Add Hex support
+--------
+
+Know how to fix
+--------
+ignore (build_call free_func [| result |] "" builder); // this is for the concat fix
 --------
 
 Need to fix
 --------
-Fix Tail Recursion // Segfaults don't know why tho
-Fix that 12 byte memory leak for concat
-Fix input for string // I need to null terminate inputted strings aka \0
-Fix array indexing causes Segfaults
 Fix logical
 --------

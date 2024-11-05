@@ -124,7 +124,7 @@ let print_any_type value llvm_type =
   | TypeKind.Integer ->
       let value_type = integer_bitwidth llvm_type in
       if value_type = 8 then (
-        let format_str = build_global_stringptr "%c\n" "char_fmt" builder in
+        let format_str = build_global_stringptr "%c\n\\0" "char_fmt" builder in
         ignore
           (build_call printf_func [| format_str; value |] "printtmp" builder);
         value)
@@ -138,7 +138,7 @@ let print_any_type value llvm_type =
       ignore (build_call printf_func [| format_str; value |] "printtmp" builder);
       value
   | TypeKind.Pointer ->
-      let format_str = build_global_stringptr "%s\n" "str_fmt" builder in
+      let format_str = build_global_stringptr "%s\n\\0" "str_fmt" builder in
       ignore (build_call printf_func [| format_str; value |] "printtmp" builder);
       value
   | TypeKind.Void -> failwith "Codegen: Cannot print void type"
@@ -499,16 +499,12 @@ let rec codegen_expr = function
           build_load float_ptr "floatresult" builder
       | Ast.Type.SymbolType { value = "char" } ->
           let char_ptr = build_alloca char_type "charinput" builder in
-          let format_str = build_global_stringptr "%c" "char_fmt" builder in
+          let format_str = build_global_stringptr "%c\\0" "char_fmt" builder in
           ignore (build_call scanf_func [| format_str; char_ptr |] "" builder);
           build_load char_ptr "charresult" builder
       | Ast.Type.SymbolType { value = "string" } ->
-          let str_ptr =
-            build_call malloc_func
-              [| const_int i64_type 256 |]
-              "strinput" builder
-          in
-          let format_str = build_global_stringptr "%s" "str_fmt" builder in
+          let str_ptr = build_alloca string_type "stringinput" builder in
+          let format_str = build_global_stringptr "%s\\0" "str_fmt" builder in
           ignore (build_call scanf_func [| format_str; str_ptr |] "" builder);
           str_ptr
       | _ -> failwith "Codegen: Unsupported type for input")

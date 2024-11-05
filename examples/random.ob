@@ -1,0 +1,14 @@
+fn random(int seed) int {
+    return (seed * 1103515245 + 12345) & 524287;
+}
+
+fn main() int {
+    int seed = 0;
+
+    for (int i = 0; i < 10; i++) {
+        seed = random(seed);
+        println("%v", seed);
+    }
+
+    return 0;
+}

@@ -83,7 +83,6 @@ into Obsidian.
 #### Type system
 
 -   User-defined types
-        into C++
     -   Single inheritance
         -   Virtual dispatch
     -   Operator overloading
@@ -109,8 +108,6 @@ into Obsidian.
         -   Good equivalents for a range of existing C/C++ looping constructs
     -   Matching
         -   Good equivalents for C/C++ uses of `switch`
-        -   Working with sum-types, especially for C++ `std::variant` and
-            `std::optional` interop
         -   Both positive (`if let` in Rust) and negative (`let else` in Rust)
             combined match control flow and variable declaration
 -   Error handling
@@ -123,7 +120,7 @@ for the vast majority of what is needed in Obsidian initially. As a consequence,
 this is a surprisingly more minimal area than the language features.
 
 -   Language and syntax support library components
-    -   Fundamental types (`bool`, `iN`, `fN`)
+    -   Fundamental types (`bool`, `int`, `float`)
     -   Any parts of tuple or array types needed in the library
     -   Pointer types
     -   Interfaces powering language syntax (operators, conversions, etc.)
@@ -140,10 +137,6 @@ to be completed as part of 0.1 beyond _language_ features:
 -   A functioning Obsidian toolchain:
     -   Supports drop-in usage as a Clang C++ toolchain with the most common
         Make- and CMake-derived build systems.
-    -   Implements most of the [features](#language-features) above, including
-        C++ interop, and any remaining gaps don't undermine the ability to
-        evaluate the remaining features or the confidence in the overall
-        evaluation.
     -   Installs on Windows, macOS, and Linux, and builds working programs for
         those platforms.
 -   Build system integration for CMake, and documentation for integrating with

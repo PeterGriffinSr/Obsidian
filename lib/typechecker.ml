@@ -100,6 +100,7 @@ module TypeChecker = struct
               match left_type with
               | Type.SymbolType { value = "int" }
               | Type.SymbolType { value = "float" }
+              | Type.SymbolType { value = "char" }
               | Type.SymbolType { value = "string" } ->
                   Type.SymbolType { value = "bool" }
               | _ ->
@@ -108,6 +109,9 @@ module TypeChecker = struct
                        "Typechecker: Unsupported type for comparison")
             else raise_type_mismatch_error left_type right_type
         | LogicalAnd | LogicalOr ->
+            (* Printf.printf "Evaluating left operand: %s\n" (Type.show left_type);
+            Printf.printf "Evaluating right operand: %s\n"
+              (Type.show right_type); *)
             if
               left_type = Type.SymbolType { value = "bool" }
               && right_type = Type.SymbolType { value = "bool" }
@@ -115,7 +119,8 @@ module TypeChecker = struct
             else
               raise
                 (TypeError
-                   "Typechecker: Logical operators require boolean operands")
+                   "Typechecker: Logical operators require both operands to be \
+                    boolean")
         | Carot ->
             if
               left_type = Type.SymbolType { value = "string" }
