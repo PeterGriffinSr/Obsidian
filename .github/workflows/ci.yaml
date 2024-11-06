@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-ubuntu:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,6 +32,63 @@ jobs:
           opam install dune menhir llvm.14.0.6 ppx_deriving odoc
 
       - name: Build project
+        run: |
+          eval $(opam env)
+          dune build
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up OCaml environment
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: 4.14.2
+
+      - name: Initialize opam
+        run: |
+          opam init -y
+          eval $(opam env)
+
+      - name: Install dependencies
+        run: |
+          eval $(opam env)
+          opam install dune menhir llvm.14.0.6 ppx_deriving odoc
+
+      - name: Build project
+        run: |
+          eval $(opam env)
+          dune build
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up OCaml environment
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: 4.14.2
+
+      - name: Initialize opam
+        shell: bash
+        run: |
+          opam init -y --disable-sandboxing
+          eval $(opam env)
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          eval $(opam env)
+          opam install dune menhir llvm.14.0.6 ppx_deriving odoc
+
+      - name: Build project
+        shell: bash
         run: |
           eval $(opam env)
           dune build
