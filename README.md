@@ -2,11 +2,11 @@
 **An experimental language**
 
 
-| Master CI | Build Status                                               |
-|-----------|------------------------------------------------------------|
-| Windows   | ![Windows builds][actions-windows-master]                  |
-| macOS     | ![macOS builds][actions-macos-master]                      |
-| Linux     | ![Linux builds][actions-linux-master]                      |
+| OS      | Build Status                                                                                   |
+|---------|------------------------------------------------------------------------------------------------|
+| Windows | ![Windows](https://github.com/PeterGriffinSr/Obsidian/actions/workflows/ci.yml/badge.svg?branch=main&event=push&os=windows-latest) |
+| macOS   | ![macOS](https://github.com/PeterGriffinSr/Obsidian/actions/workflows/ci.yml/badge.svg?branch=main&event=push&os=macos-latest)     |
+| Linux   | ![Linux](https://github.com/PeterGriffinSr/Obsidian/actions/workflows/ci.yml/badge.svg?branch=main&event=push&os=ubuntu-latest)    |
 
 <p align="center">
   <a href="#why-build-obsidian">Why?</a> |
