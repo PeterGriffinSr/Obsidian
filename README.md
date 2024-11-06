@@ -1,13 +1,6 @@
 # Obsidian Language: 
 **An experimental language**
 
-
-| Master CI | Build Status                                               |
-|-----------|------------------------------------------------------------|
-| Windows   | ![Windows builds][actions-windows-master]                  |
-| macOS     | ![macOS builds][actions-macos-master]                      |
-| Linux     | ![Linux builds][actions-linux-master]                      |
-
 <p align="center">
   <a href="#why-build-obsidian">Why?</a> |
   <a href="#language-goals">Goals</a> |
