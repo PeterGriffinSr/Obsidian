@@ -19,7 +19,7 @@ jobs:
       - name: Set up OCaml environment
         uses: avsm/setup-ocaml@v1
         with:
-          ocaml-version: 4.14.1
+          ocaml-version: 4.14.2
 
       - name: Initialize opam
         run: |
@@ -33,4 +33,5 @@ jobs:
 
       - name: Build project
         run: |
+          eval $(opam env)
           dune build
