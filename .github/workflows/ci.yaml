@@ -36,6 +36,58 @@ jobs:
           eval $(opam env)
           dune build
 
+  build-fedora:
+    runs-on: fedora-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install opam
+        run: sudo dnf install -y opam
+
+      - name: Set up OCaml environment
+        run: |
+          opam init -y
+          opam switch create . 4.14.2
+          eval $(opam env)
+
+      - name: Install dependencies
+        run: |
+          eval $(opam env)
+          opam install dune menhir llvm.14.0.6 ppx_deriving odoc
+
+      - name: Build project
+        run: |
+          eval $(opam env)
+          dune build
+
+  build-debian:
+    runs-on: debian-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install opam
+        run: sudo apt-get update && sudo apt-get install -y opam
+
+      - name: Set up OCaml environment
+        run: |
+          opam init -y
+          opam switch create . 4.14.2
+          eval $(opam env)
+
+      - name: Install dependencies
+        run: |
+          eval $(opam env)
+          opam install dune menhir llvm.14.0.6 ppx_deriving odoc
+
+      - name: Build project
+        run: |
+          eval $(opam env)
+          dune build
+
   build-macos:
     runs-on: macos-latest
 
@@ -43,14 +95,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up OCaml environment
-        uses: avsm/setup-ocaml@v1
-        with:
-          ocaml-version: 4.14.2
+      - name: Install opam
+        run: brew install opam
 
-      - name: Initialize opam
+      - name: Set up OCaml environment
         run: |
           opam init -y
+          opam switch create . 4.14.2
           eval $(opam env)
 
       - name: Install dependencies
@@ -70,10 +121,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Install MinGW
+        run: choco install mingw -y
+
       - name: Set up OCaml environment
         uses: avsm/setup-ocaml@v1
         with:
-          ocaml-version: 4.14.2
+          ocaml-version: 4.14.2+mingw64
 
       - name: Initialize opam
         shell: bash
